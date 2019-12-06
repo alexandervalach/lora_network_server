@@ -1,0 +1,8 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="network-server:jar">
+    <output-path>$PROJECT_DIR$/</output-path>
+    <root id="archive" name="network-server.jar">
+      <element id="module-output" name="network-server" />
+    </root>
+  </artifact>
+</component>
