@@ -3,7 +3,9 @@ package database;
 import core.DateManager;
 import core.ProgramResources;
 import org.json.JSONObject;
+import org.postgresql.util.PSQLException;
 
+import java.net.ConnectException;
 import java.sql.*;
 import java.text.DateFormat;
 import java.text.ParseException;
@@ -59,9 +61,14 @@ public class DBHandler {
       System.out.println("Connecting to database...");
       this.conn = DriverManager.getConnection(DB_URL, USER, PASS);
       this.stmt = conn.createStatement();
+    } catch (PSQLException e) {
+      System.out.println("Connection refused by database server! Is it functional and running?");
+      System.out.println("LoRa Network Server will now exit");
+      System.exit(1);
     } catch (Exception e) {
       e.printStackTrace();
     }
+
     System.out.println("Connected!");
   }
 
@@ -76,14 +83,15 @@ public class DBHandler {
    * @param loraProtocolVer
    * @param transmissionParamId
    */
-  public void writeAp(String id, String protocolVersion, int maxPower, int channelsNum, String dutyCycleRefresh, String loraProtocol, String loraProtocolVer, int transmissionParamId) {
+  public void writeAp(String id, String protocolVersion, int maxPower, int channelsNum, Time dutyCycleRefresh, String loraProtocol, String loraProtocolVer, int transmissionParamId) {
     try {
       preparedStmt = conn.prepareStatement("INSERT INTO aps (id, protocol_ver, max_power, channels_num, duty_cycle_refresh, lora_protocol, lora_protocol_ver, transmission_param_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+      System.out.println(dutyCycleRefresh);
       preparedStmt.setString(1, id);
       preparedStmt.setString(2, protocolVersion);
       preparedStmt.setInt(3, maxPower);
       preparedStmt.setInt(4, channelsNum);
-      preparedStmt.setString(5, dutyCycleRefresh);
+      preparedStmt.setTime(5, dutyCycleRefresh);
       preparedStmt.setString(6, loraProtocol);
       preparedStmt.setString(7, loraProtocolVer);
       preparedStmt.setInt(8, transmissionParamId);

@@ -19,7 +19,7 @@ public class SocketThread extends Thread
   private Socket socket;
   private OutputStream outStream = null;
   private InputStream inStream = null;
-  private ProcessThread processThread = null;
+  private ProcessThread processThread;
   private String hWIdentifier;
   private int internalIdentifier;
 
@@ -42,7 +42,8 @@ public class SocketThread extends Thread
 
     // Starting message processing thread
     new Thread(processThread).start();
-    // While running listens for incomming messages
+
+    // While running listens for incoming messages
 
     while (running && socket.isConnected()) {
       try {
@@ -109,10 +110,13 @@ public class SocketThread extends Thread
 
     while (true) {
       length = inStream.read(buffer);
+
       if (length <= 0) {
-        throw new IOException("Connection has been closed");
+        throw new IOException("Connection closed");
       }
+
       result.write(buffer, 0, length);
+
       if (inStream.available() == 0) {
         break;
       }
@@ -152,7 +156,7 @@ public class SocketThread extends Thread
           e.printStackTrace();
         }
         // NETWORK DOWN
-        if (running==false){
+        if (running == false){
           break; // lasts messages + ENDING message
         }
         this.listener.process(parent, inData, running, internalIdentifier);

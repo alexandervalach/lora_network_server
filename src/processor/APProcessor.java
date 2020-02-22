@@ -7,6 +7,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.sql.Time;
 import java.util.ArrayList;
 
 /**
@@ -55,7 +56,7 @@ public class APProcessor {
         "STIOT v 1.01",
         jsonobject.getInt("max_power"),
         jsonobject.getInt("channels"),
-        DateManager.formatDate("00:mm:ss"),
+        Time.valueOf(DateManager.formatDate("00:mm:ss")),
         jsonobject.getJSONObject("lora_stand").getString("name"),
         jsonobject.getJSONObject("lora_stand").getString("version"),
         transmissionParamId
