@@ -148,10 +148,10 @@ public class EDProcessor {
 
       // Determines transmission power up
       if (finalRssi < this.UpPWSensitivity && !primary.getBoolean("conf_need") || finalSNR < this.SNRSensitivity && !primary.getBoolean("conf_need")) {
-        powerChanged = finalRssi < this.UpSFSensitivity ? this.programResources.dbHandler.increasePower(primary.getString("dev_id"), 0, 0, 1) : this.programResources.dbHandler.increasePower(primary.getString("dev_id"), 1, 0, 0);
+        powerChanged = finalRssi < this.UpSFSensitivity ? this.programResources.dbHandler.increasePower(primary.getString("dev_id"), 0, 1) : this.programResources.dbHandler.increasePower(primary.getString("dev_id"), 1, 0);
 
         if (!powerChanged) {
-          powerChanged = this.programResources.dbHandler.increasePower(primary.getString("dev_id"), 1, 0, 0);
+          powerChanged = this.programResources.dbHandler.increasePower(primary.getString("dev_id"), 1, 0);
         }
       }
 

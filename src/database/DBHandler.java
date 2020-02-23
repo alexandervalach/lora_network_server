@@ -84,9 +84,13 @@ public class DBHandler {
    * @param transmissionParamId
    */
   public void writeAp(String id, String protocolVersion, int maxPower, int channelsNum, Time dutyCycleRefresh, String loraProtocol, String loraProtocolVer, int transmissionParamId) {
+    if (this.accessPointExists(id)) {
+      System.out.println("AP with ID=" + id + " already exists");
+      return;
+    }
+
     try {
       preparedStmt = conn.prepareStatement("INSERT INTO aps (id, protocol_ver, max_power, channels_num, duty_cycle_refresh, lora_protocol, lora_protocol_ver, transmission_param_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
-      System.out.println(dutyCycleRefresh);
       preparedStmt.setString(1, id);
       preparedStmt.setString(2, protocolVersion);
       preparedStmt.setInt(3, maxPower);
@@ -161,6 +165,11 @@ public class DBHandler {
 
   // Writes new node into DB
   public void WriteNode(String id, int upPower, int downPower, int spf, String formattedDate, int appId, int transmissionParam) {
+    if (this.endNodeExists(id)) {
+      System.out.println("Node with ID=" + id + " already exists");
+      return;
+    }
+
     try {
       preparedStmt = conn.prepareStatement("INSERT INTO nodes (id, upstream_power, downstream_power, spf, duty_cycle_refresh, application_id, transmission_param_id) VALUES (?, ?, ?, ?, ?, ?, ?)");
       preparedStmt.setString(1, id);
@@ -181,7 +190,7 @@ public class DBHandler {
         System.out.println("DH key deleted for node: " + id);
       } catch (SQLException e1) {
         e1.printStackTrace();
-        this.increasePower(id, 0, 0, 0);
+        this.increasePower(id, 0, 0);
       }
     }
 
@@ -277,11 +286,10 @@ public class DBHandler {
    * UPDATE: Updates node power settings in DB
    * @param nodeId
    * @param upPowerIncrement
-   * @param downPowerIncrement
    * @param spfIncrement
    * @return boolean
    */
-  public boolean increasePower(String nodeId, int upPowerIncrement, int downPowerIncrement, int spfIncrement) {
+  public boolean increasePower(String nodeId, int upPowerIncrement, int spfIncrement) {
     try {
       JSONObject originalvalue = new JSONObject(this.readNode(nodeId));
       int newPower = originalvalue.getInt("upstream_power") + upPowerIncrement;
@@ -410,5 +418,39 @@ public class DBHandler {
       e.printStackTrace();
     }
     return "[]";
+  }
+
+  /**
+   * Checks whether access point exists
+   * @param id
+   * @return
+   */
+  public Boolean accessPointExists (String id) {
+    try {
+      preparedStmt = conn.prepareStatement("SELECT id FROM aps WHERE id = ?");
+      preparedStmt.setString(1, id);
+      ResultSet result = preparedStmt.executeQuery();
+      return result.next();
+    } catch (SQLException e) {
+      e.printStackTrace();
+    }
+    return false;
+  }
+
+  /**
+   * Checks whether node exists
+   * @param id
+   * @return
+   */
+  public Boolean endNodeExists (String id) {
+    try {
+      preparedStmt = conn.prepareStatement("SELECT id FROM nodes WHERE id = ?");
+      preparedStmt.setString(1, id);
+      ResultSet result = preparedStmt.executeQuery();
+      return result.next();
+    } catch (SQLException e) {
+      e.printStackTrace();
+    }
+    return false;
   }
 }
