@@ -108,11 +108,14 @@ public class DBHandler {
 
   /**
    * Writes new KEY and SEQ for selected node
-   * @param id
-   * @param lastSeq
-   * @param dhKey
+   * @param id node id
+   * @param lastSeq last sequence number
+   * @param dhKey diffie-hellman key
    */
   public void writeKey(String id, int lastSeq, String dhKey) {
+    System.out.println("Node ID: " + id);
+    System.out.println("Last Seq: " + lastSeq);
+
     try {
       if (!dhKey.equals("")) {
         preparedStmt = conn.prepareStatement("UPDATE nodes SET dh_key = ?, last_seq = ? WHERE id = ?");
@@ -122,8 +125,12 @@ public class DBHandler {
         preparedStmt.executeUpdate();
         System.out.println("New KEY written into database for node ID: " + id);
       } else {
+        System.out.println("DH Key: " + dhKey);
+
         preparedStmt = conn.prepareStatement("UPDATE nodes SET last_seq = ? WHERE id = ?");
-        preparedStmt.execute();
+        preparedStmt.setInt(1, lastSeq);
+        preparedStmt.setString(2, id);
+        preparedStmt.executeUpdate();
         System.out.println("Seq updated for node ID: " + id);
       }
       preparedStmt.executeUpdate();
