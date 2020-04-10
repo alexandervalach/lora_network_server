@@ -88,14 +88,15 @@ public class EDProcessor {
         }
       }
       // If check was successful writes new seq into DB
-      this.programResources.dbHandler.writeKey(primary.getString("dev_id"), primary.getInt("seq"), "");
+      programResources.dbHandler.writeKey(primary.getString("dev_id"), primary.getInt("seq"), "");
 
       // Loads previous messages
       int msgGroupId = 0;
       JSONArray prevMsgs;
 
       try {
-        prevMsgs = new JSONArray(this.programResources.dbHandler.readLastNMessages(primary.getString("dev_id")));
+        System.out.println("Primary packet: " + primary.toString());
+        prevMsgs = new JSONArray(programResources.dbHandler.readLastNMessages(primary.getString("dev_id")));
       } catch (Exception e) {
         e.printStackTrace();
         prevMsgs = new JSONArray();

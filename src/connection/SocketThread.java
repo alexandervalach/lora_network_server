@@ -50,10 +50,7 @@ public class SocketThread extends Thread
         String inData = this.read();
         //System.out.println(inData);
         processThread.putToQueue(inData);
-      } catch (IOException e) {
-        e.printStackTrace();
-        break;
-      } catch (InterruptedException e) {
+      } catch (IOException | InterruptedException e) {
         e.printStackTrace();
         break;
       }
@@ -67,9 +64,7 @@ public class SocketThread extends Thread
       inStream.close();
       socket.close();
       this.processThread.listener.socketDown(internalIdentifier);
-    } catch (IOException e) {
-      e.printStackTrace();
-    } catch (InterruptedException e) {
+    } catch (IOException | InterruptedException e) {
       e.printStackTrace();
     }
   }
@@ -156,7 +151,7 @@ public class SocketThread extends Thread
           e.printStackTrace();
         }
         // NETWORK DOWN
-        if (running == false){
+        if (!running){
           break; // lasts messages + ENDING message
         }
         this.listener.process(parent, inData, running, internalIdentifier);
@@ -169,7 +164,6 @@ public class SocketThread extends Thread
           inData = jobQueue.poll();
           this.listener.process(parent, inData, false, internalIdentifier);
         }
-        return;
       }
     }
   }

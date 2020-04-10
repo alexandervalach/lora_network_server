@@ -232,7 +232,7 @@ public class DBHandler {
   public void writeSentDownlinkMsg(String appData, String netData, int dutyCRemaining, String apId, String nodeId) {
     try {
       // Version 1.0 does not support downstream ACK edit here
-      preparedStmt = conn.prepareStatement("INSERT INTO downlink_messages (app_data, duty_cycle_remaining, sent, ack_required, delivered, send_time, ap_id, node_id, net_data) VALUES (?, ?, true, false, true, ? ,? ,? ,?)");
+      preparedStmt = conn.prepareStatement("INSERT INTO downlink_messages (app_data, duty_cycle_remaining, sent, ack_required, delivered, send_time, ap_id, node_id, net_data) VALUES (?, ?, true, false, true, ? ,? ,? ,?::json)");
       preparedStmt.setString(1, appData);
       preparedStmt.setInt(2, dutyCRemaining);
       preparedStmt.setTimestamp(3, DateManager.getTimestamp());
@@ -258,7 +258,7 @@ public class DBHandler {
     try {
       // Special usage: sets device to full power
       if (upPowerDecrement == 0 && downPowerDecrement == 0 && spfDecrement == 0) {
-        preparedStmt = conn.prepareStatement("UPDATE nodes SET downstream_power = ? upstream_power = ?, spf = ? WHERE id = ?");
+        preparedStmt = conn.prepareStatement("UPDATE nodes SET downstream_power = ?, upstream_power = ?, spf = ? WHERE id = ?");
         preparedStmt.setInt(1, maxPower);
         preparedStmt.setInt(2, maxPower);
         preparedStmt.setInt(3, maxSPF);
@@ -273,15 +273,15 @@ public class DBHandler {
       int newSpf = originalValue.getInt("spf") - spfDecrement;
 
       if (newPower > 4 && newSpf > 6) {
-        preparedStmt = conn.prepareStatement("UPDATE nodes SET upstream_power = ? spf = ? WHERE id = ?");
+        preparedStmt = conn.prepareStatement("UPDATE nodes SET upstream_power = ?, spf = ? WHERE id = ?");
         preparedStmt.setInt(1, newPower);
         preparedStmt.setInt(2, newSpf);
         preparedStmt.setString(3, nodeId);
         preparedStmt.executeUpdate();
-        System.out.println("Node power updated to " + newPower + " and SPF to " + newSpf);
+        System.out.println("Node power updated to " + newPower + " and SF to " + newSpf);
         return true;
       }
-      System.out.println("No need to update power and SPF");
+      System.out.println("No need to update power and SF");
       return false;
     } catch (Exception e) {
       e.printStackTrace();
@@ -424,6 +424,7 @@ public class DBHandler {
     } catch (SQLException e) {
       e.printStackTrace();
     }
+
     return "[]";
   }
 
