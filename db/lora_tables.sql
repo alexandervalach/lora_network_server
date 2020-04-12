@@ -1,3 +1,7 @@
+-- noinspection SqlNoDataSourceInspectionForFile
+
+-- noinspection SqlDialectInspectionForFile
+
 /* Table SQL dump */
 
 CREATE TABLE applications
@@ -21,7 +25,7 @@ CREATE TABLE nodes
 (
 id VARCHAR(130) PRIMARY KEY,
 dh_key VARCHAR(128),
-last_seq INT,
+last_seq INT DEFAULT 1,
 upstream_power INT,
 downstream_Power INT,
 spf INT,
