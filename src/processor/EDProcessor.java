@@ -96,7 +96,14 @@ public class EDProcessor {
 
       try {
         System.out.println("Primary packet: " + primary.toString());
-        prevMsgs = new JSONArray(programResources.dbHandler.readLastNMessages(primary.getString("dev_id")));
+        System.out.println("Node id: " + primary.getString("dev_id"));
+        String lastMsg = programResources.dbHandler.readLastNMessages(primary.getString("dev_id"));
+
+        if (lastMsg != null && !lastMsg.equals("[]")) {
+          prevMsgs = new JSONArray(lastMsg);
+        } else {
+          prevMsgs = new JSONArray();
+        }
       } catch (Exception e) {
         e.printStackTrace();
         prevMsgs = new JSONArray();
@@ -123,13 +130,30 @@ public class EDProcessor {
         finalSNR = finalSNR / prevMsgs.length();
       }
 
+      int messageTypeId = programResources.dbHandler.readMessageType("normal");
+
       // Saves all messages into DB
       for (JSONObject jsonObject : currentGrape) {
-        if (jsonObject.toString().equals(primary.toString())) {
-          programResources.dbHandler.writeUplinkMsg(jsonObject.getString("data"), Float.parseFloat(jsonObject.getString("snr")), Float.parseFloat(jsonObject.getString("rssi")), jsonObject.getInt("duty_c"), true, DateManager.getTimestamp(), msgGroupId, jsonObject.getString("hWIdentifier"), jsonObject.getString("dev_id"));
-        } else {
-          programResources.dbHandler.writeUplinkMsg(jsonObject.getString("data"), Float.parseFloat(jsonObject.getString("snr")), Float.parseFloat(jsonObject.getString("rssi")), jsonObject.getInt("duty_c"), false, DateManager.getTimestamp(), msgGroupId, jsonObject.getString("hWIdentifier"), jsonObject.getString("dev_id"));
-        }
+        boolean primaryMessage = jsonObject.toString().equals(primary.toString());
+
+        programResources.dbHandler.writeUplinkMsg(
+            jsonObject.getString("data"),
+            Float.parseFloat(jsonObject.getString("snr")),
+            Float.parseFloat(jsonObject.getString("rssi")),
+            jsonObject.getInt("duty_c"),
+            primaryMessage,
+            DateManager.getTimestamp(),
+            msgGroupId,
+            Float.parseFloat(jsonObject.getString("freq")),
+            jsonObject.getInt("sf"),
+            jsonObject.getInt("power"),
+            jsonObject.getInt("time"),
+            jsonObject.getString("cr"),
+            jsonObject.getInt("band"),
+            messageTypeId,
+            jsonObject.getString("hWIdentifier"),
+            jsonObject.getString("dev_id")
+        );
       }
 
       // Quits if response unavailable
@@ -249,13 +273,26 @@ public class EDProcessor {
 
         // Sends message via desired AP
         int apIdentifier = primary.getInt("apIdentifier");
+
         // TODO: Uprav ked downlink nepojde kvoli duty cyclu
         if (remainingDutyC > 0) {
           this.programResources.sslConnection.socketThreadArrayList.get(apIdentifier).write(txlMsg.toString());
           System.out.println("********** Raw response " + rawResponse.toString());
           if (rawResponse.toString().equals("{}")) {
             // Writes new wanna-be-sent message
-            this.programResources.dbHandler.writeSentDownlinkMsg(messageBody.getString("app_data"), messageBody.getString("net_data"), remainingDutyC, primary.getString("hWIdentifier"), messageBody.getString("dev_id"));
+            this.programResources.dbHandler.writeSentDownlinkMsg(
+                messageBody.getString("app_data"),
+                messageBody.getString("net_data"),
+                remainingDutyC,
+                Float.parseFloat(primary.getString("freq")),
+                primary.getInt("sf"),
+                messageBody.getInt("power"),
+                primary.getInt("time"),
+                primary.getString("cr"),
+                primary.getInt("band"),
+                primary.getString("hWIdentifier"),
+                messageBody.getString("dev_id")
+            );
           } else {
             this.programResources.dbHandler.markDownlinkAsSent(rawResponse.getInt("id"), remainingDutyC); // Marks messages as sent in DB
           }

@@ -113,9 +113,6 @@ public class DBHandler {
    * @param dhKey diffie-hellman key
    */
   public void writeKey(String id, int lastSeq, String dhKey) {
-    System.out.println("Node ID: " + id);
-    System.out.println("Last Seq: " + lastSeq);
-
     try {
       if (!dhKey.equals("")) {
         preparedStmt = conn.prepareStatement("UPDATE nodes SET dh_key = ?, last_seq = ? WHERE id = ?");
@@ -123,17 +120,15 @@ public class DBHandler {
         preparedStmt.setInt(2, lastSeq);
         preparedStmt.setString(3, id);
         preparedStmt.executeUpdate();
+        System.out.println("DH Key: " + dhKey);
         System.out.println("New KEY written into database for node ID: " + id);
       } else {
-        System.out.println("DH Key: " + dhKey);
-
         preparedStmt = conn.prepareStatement("UPDATE nodes SET last_seq = ? WHERE id = ?");
         preparedStmt.setInt(1, lastSeq);
         preparedStmt.setString(2, id);
         preparedStmt.executeUpdate();
-        System.out.println("Seq updated for node ID: " + id);
+        System.out.println("Seq updated to " + lastSeq + " for node " + id);
       }
-      preparedStmt.executeUpdate();
     } catch (Exception e) {
       e.printStackTrace();
     }
@@ -141,44 +136,52 @@ public class DBHandler {
 
   /**
    * Writes new uplink message into DB
-   * @param appData
-   * @param snr
-   * @param rssi
-   * @param dutyCRemaining
-   * @param isPrimary
-   * @param receivedTime
-   * @param msgGroupNumber
-   * @param apId
-   * @param nodeId
-   */
-  public void writeUplinkMsg(String appData, float snr, float rssi, int dutyCRemaining, boolean isPrimary, Timestamp receivedTime, int msgGroupNumber, String apId, String nodeId) {
+   * */
+  public void writeUplinkMsg(String appData, float snr, float rssi, int dutyCRemaining, boolean isPrimary,
+                             Timestamp receiveTime, int msgGroupNumber, float frequency, int spf, int power,
+                             int airtime, String coderate, int bandwidth, int messageTypeId,
+                             String apId, String nodeId) {
     try {
-      preparedStmt = conn.prepareStatement("INSERT INTO uplink_messages (app_data, snr, rssi, duty_cycle_remaining, is_primary, receive_time, msg_group_number, ap_id, node_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+      preparedStmt = conn.prepareStatement("INSERT INTO uplink_messages " +
+              "(app_data, snr, rssi, duty_cycle_remaining, is_primary, receive_time, " +
+              "msg_group_number, frequency, spf, power, airtime, coderate, bandwidth, " +
+              "message_type_id, ap_id, node_id) " +
+              "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
       preparedStmt.setString(1, appData);
       preparedStmt.setFloat(2, snr);
       preparedStmt.setFloat(3, rssi);
       preparedStmt.setInt(4, dutyCRemaining);
       preparedStmt.setBoolean(5, isPrimary);
-      preparedStmt.setTimestamp(6, receivedTime);
+      preparedStmt.setTimestamp(6, receiveTime);
       preparedStmt.setInt(7, msgGroupNumber);
-      preparedStmt.setString(8, apId);
-      preparedStmt.setString(9, nodeId);
+      preparedStmt.setFloat(8, frequency);
+      preparedStmt.setFloat(9, spf);
+      preparedStmt.setInt(10, power);
+      preparedStmt.setInt(11, airtime);
+      preparedStmt.setString(12, coderate);
+      preparedStmt.setInt(13, bandwidth);
+      preparedStmt.setInt(14, messageTypeId);
+      preparedStmt.setString(15, apId);
+      preparedStmt.setString(16, nodeId);
       preparedStmt.executeUpdate();
-      System.out.println("New UPLINK MSG written into database for AP " + apId);
+      System.out.println("New UPLINK MSG from " + nodeId + " written into database for AP " + apId);
     } catch (Exception e) {
       e.printStackTrace();
     }
   }
 
   // Writes new node into DB
-  public void WriteNode(String id, int upPower, int downPower, int spf, String formattedDate, int appId, int transmissionParam) {
+  public void WriteNode(String id, int upPower, int downPower, int spf, String formattedDate,
+                        int appId, int transmissionParam) {
     if (this.endNodeExists(id)) {
-      System.out.println("Node with ID=" + id + " already exists");
+      System.out.println("Node with ID " + id + " already exists");
       return;
     }
 
     try {
-      preparedStmt = conn.prepareStatement("INSERT INTO nodes (id, upstream_power, downstream_power, spf, duty_cycle_refresh, application_id, transmission_param_id) VALUES (?, ?, ?, ?, ?, ?, ?)");
+      preparedStmt = conn.prepareStatement("INSERT INTO nodes " +
+              "(id, upstream_power, downstream_power, spf, duty_cycle_refresh, application_id, transmission_param_id) " +
+              "VALUES (?, ?, ?, ?, ?, ?, ?)");
       preparedStmt.setString(1, id);
       preparedStmt.setInt(2, upPower);
       preparedStmt.setInt(3, downPower);
@@ -205,9 +208,9 @@ public class DBHandler {
 
   /**
    * Schedule new downlink messages
-   * @param appData
-   * @param apId
-   * @param nodeId
+   * @param appData base64 encoded data
+   * @param apId access point hardware identifier
+   * @param nodeId end node identifier
    */
   public void writeUnsentDownlinkMsg(String appData, String apId, String nodeId) {
     try {
@@ -225,20 +228,32 @@ public class DBHandler {
 
   /**
    * Update entry about sent downlink message
-   * @param appData
-   * @param apId
-   * @param nodeId
+   * @param appData base64 encoded data
+   * @param apId access point hardware identifier
+   * @param nodeId end node identifier
    */
-  public void writeSentDownlinkMsg(String appData, String netData, int dutyCRemaining, String apId, String nodeId) {
+  public void writeSentDownlinkMsg(String appData, String netData, int dutyCRemaining, float frequency,
+                                   int spf, int power, int airtime, String coderate, int bandwidth,
+                                   String apId, String nodeId) {
     try {
       // Version 1.0 does not support downstream ACK edit here
-      preparedStmt = conn.prepareStatement("INSERT INTO downlink_messages (app_data, duty_cycle_remaining, sent, ack_required, delivered, send_time, ap_id, node_id, net_data) VALUES (?, ?, true, false, true, ? ,? ,? ,?::json)");
+      preparedStmt = conn.prepareStatement("INSERT INTO downlink_messages " +
+              "(app_data, duty_cycle_remaining, sent, ack_required, delivered, send_time, " +
+              "frequency, spf, power, airtime, coderate, bandwidth, ap_id, node_id, net_data) " +
+              "VALUES (?, ?, true, false, true, ? , ?, ?, ?, ?, ?, ?, ? ,? ,?::json)");
+
       preparedStmt.setString(1, appData);
       preparedStmt.setInt(2, dutyCRemaining);
       preparedStmt.setTimestamp(3, DateManager.getTimestamp());
-      preparedStmt.setString(4, apId);
-      preparedStmt.setString(5, nodeId);
-      preparedStmt.setString(6, netData);
+      preparedStmt.setFloat(4, frequency);
+      preparedStmt.setInt(5, spf);
+      preparedStmt.setInt(6, power);
+      preparedStmt.setInt(7, airtime);
+      preparedStmt.setString(8, coderate);
+      preparedStmt.setInt(9, bandwidth);
+      preparedStmt.setString(10, apId);
+      preparedStmt.setString(11, nodeId);
+      preparedStmt.setString(12, netData);
       preparedStmt.executeUpdate();
       System.out.println("New Sent MSG_D written into database for Node: " + nodeId);
     } catch (SQLException e) {
@@ -281,7 +296,6 @@ public class DBHandler {
         System.out.println("Node power updated to " + newPower + " and SF to " + newSpf);
         return true;
       }
-      System.out.println("No need to update power and SF");
       return false;
     } catch (Exception e) {
       e.printStackTrace();
@@ -313,7 +327,6 @@ public class DBHandler {
       }
 
       return false;
-
     } catch (Exception e) {
       e.printStackTrace();
     }
@@ -356,7 +369,6 @@ public class DBHandler {
     }
     return null;
   }
-
 
   /**
    * QUERY: Returns node of selected ID
@@ -410,8 +422,8 @@ public class DBHandler {
   }
 
   /**
-   * QUERY: Gets last N msgs for prosessing, N defined in config
-   * @param nodeId
+   * QUERY: Gets last N messages for processing, N defined in config
+   * @param nodeId end node identifier
    * @return String
    */
   public String readLastNMessages(String nodeId) {
@@ -423,15 +435,14 @@ public class DBHandler {
       return !rs.next() ? "[]" : rs.getString("array_to_json");
     } catch (SQLException e) {
       e.printStackTrace();
+      return "[]";
     }
-
-    return "[]";
   }
 
   /**
    * Checks whether access point exists
-   * @param id
-   * @return
+   * @param id access point hardware identifier
+   * @return Boolean
    */
   public Boolean accessPointExists (String id) {
     try {
@@ -447,8 +458,8 @@ public class DBHandler {
 
   /**
    * Checks whether node exists
-   * @param id
-   * @return
+   * @param id end node hardware identifier
+   * @return Boolean
    */
   public Boolean endNodeExists (String id) {
     try {
@@ -460,5 +471,22 @@ public class DBHandler {
       e.printStackTrace();
     }
     return false;
+  }
+
+  /**
+   * Checks whether node exists
+   * @param message_name message type name
+   * @return int
+   */
+  public int readMessageType (String message_name) {
+    try {
+      preparedStmt = conn.prepareStatement("SELECT id FROM message_types WHERE name = ?");
+      preparedStmt.setString(1, message_name);
+      ResultSet result = preparedStmt.executeQuery();
+      return !result.next() ? 1 : result.getInt("id");
+    } catch (SQLException e) {
+      e.printStackTrace();
+    }
+    return 1;
   }
 }

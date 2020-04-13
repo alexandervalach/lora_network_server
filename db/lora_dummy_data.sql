@@ -32,3 +32,10 @@ INSERT INTO downlink_messages
 (app_data, duty_cycle_remaining, sent, ack_required, delivered, send_time, ap_id, node_id) VALUES
 ('dole ide nepotvrdzujeme',1203,true,false,true,'2017-2-24 11:23:54','99999ff','11111aaa'),
 ('dole ide potvrdzujeme',1002,true,true,true,'2017-2-24 11:21:24','88888xx','11111aaa');
+
+INSERT INTO message_types
+(id, name) VALUES
+(1, 'data'),
+(2, 'emergency'),
+(3, 'hello'),
+(4, 'register');

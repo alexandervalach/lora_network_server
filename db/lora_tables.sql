@@ -44,7 +44,7 @@ channels_num INT,
 duty_cycle_refresh TIME,
 lora_protocol VARCHAR(50),
 lora_protocol_ver VARCHAR(50),
-transmission_param_id int REFERENCES transmission_params(id) NOT NULL
+transmission_param_id INT REFERENCES transmission_params(id) NOT NULL
 );
 
 CREATE TABLE uplink_messages
@@ -56,12 +56,19 @@ rssi DECIMAL,
 duty_cycle_remaining INT,
 is_primary BOOLEAN,
 receive_time TIMESTAMP,
+frequency DECIMAL,
+spf INT,
+power INT,
+airtime INT,
+coderate VARCHAR(20),
+bandwidth INT,
 msg_group_number INT,
+message_type_id INT REFERENCES message_types(id) NOT NULL,
 ap_id VARCHAR(130) REFERENCES aps(id) NOT NULL,
 node_id VARCHAR(130) REFERENCES nodes(id) NOT NULL
 );	
 
-CREATE TABLE downlink_messages	
+CREATE TABLE downlink_messages
 (
 id SERIAL PRIMARY KEY,
 app_data VARCHAR(1024),
@@ -71,6 +78,18 @@ sent BOOLEAN,
 ack_required BOOLEAN,
 delivered BOOLEAN,
 send_time TIMESTAMP,
+frequency DECIMAL,
+spf INT,
+power INT,
+airtime INT,
+coderate VARCHAR(20),
+bandwidth INT,
 ap_id VARCHAR(130) REFERENCES aps(id),
 node_id VARCHAR(130) REFERENCES nodes(id) NOT NULL
+);
+
+CREATE TABLE message_types
+(
+id SERIAL PRIMARY KEY,
+name VARCHAR(50)
 );
