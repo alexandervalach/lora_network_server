@@ -138,15 +138,15 @@ public class DBHandler {
    * Writes new uplink message into DB
    * */
   public void writeUplinkMsg(String appData, float snr, float rssi, int dutyCRemaining, boolean isPrimary,
-                             Timestamp receiveTime, int msgGroupNumber, float frequency, int spf, int power,
-                             int airtime, String coderate, int bandwidth, int messageTypeId,
+                             Timestamp receiveTime, int msgGroupNumber, int seqNum, float frequency, int spf,
+                             int power, int airtime, String coderate, int bandwidth, int messageTypeId,
                              String apId, String nodeId) {
     try {
       preparedStmt = conn.prepareStatement("INSERT INTO uplink_messages " +
               "(app_data, snr, rssi, duty_cycle_remaining, is_primary, receive_time, " +
-              "msg_group_number, frequency, spf, power, airtime, coderate, bandwidth, " +
+              "msg_group_number, seq, frequency, spf, power, airtime, coderate, bandwidth, " +
               "message_type_id, ap_id, node_id) " +
-              "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+              "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
       preparedStmt.setString(1, appData);
       preparedStmt.setFloat(2, snr);
       preparedStmt.setFloat(3, rssi);
@@ -154,15 +154,16 @@ public class DBHandler {
       preparedStmt.setBoolean(5, isPrimary);
       preparedStmt.setTimestamp(6, receiveTime);
       preparedStmt.setInt(7, msgGroupNumber);
-      preparedStmt.setFloat(8, frequency);
-      preparedStmt.setFloat(9, spf);
-      preparedStmt.setInt(10, power);
-      preparedStmt.setInt(11, airtime);
-      preparedStmt.setString(12, coderate);
-      preparedStmt.setInt(13, bandwidth);
-      preparedStmt.setInt(14, messageTypeId);
-      preparedStmt.setString(15, apId);
-      preparedStmt.setString(16, nodeId);
+      preparedStmt.setInt(8, seqNum);
+      preparedStmt.setFloat(9, frequency);
+      preparedStmt.setFloat(10, spf);
+      preparedStmt.setInt(11, power);
+      preparedStmt.setInt(12, airtime);
+      preparedStmt.setString(13, coderate);
+      preparedStmt.setInt(14, bandwidth);
+      preparedStmt.setInt(15, messageTypeId);
+      preparedStmt.setString(16, apId);
+      preparedStmt.setString(17, nodeId);
       preparedStmt.executeUpdate();
       System.out.println("New UPLINK MSG from " + nodeId + " written into database for AP " + apId);
     } catch (Exception e) {

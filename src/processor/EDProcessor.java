@@ -144,6 +144,7 @@ public class EDProcessor {
             primaryMessage,
             DateManager.getTimestamp(),
             msgGroupId,
+            jsonObject.getInt("seq"),
             Float.parseFloat(jsonObject.getString("freq")),
             jsonObject.getInt("sf"),
             jsonObject.getInt("power"),
