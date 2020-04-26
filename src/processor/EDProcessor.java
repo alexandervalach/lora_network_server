@@ -3,6 +3,7 @@ package processor;
 import core.DateManager;
 import core.ProgramResources;
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
@@ -211,6 +212,8 @@ public class EDProcessor {
         JSONObject messageBody = new JSONObject();
         messageBody.put("dev_id", primary.getString("dev_id"));
         messageBody.put("power", downPw);
+        // Calculate airtime for downlink messages
+        messageBody.put("time", getMsgCost(primary, spf));
 
         // Packs app data if available
         if (!rawResponse.toString().equals("{}")) {
@@ -354,20 +357,29 @@ public class EDProcessor {
     int loraFiitOverheadBytes = 12; // 4B LoRa@FIIT data and 8B Lora preamble
     int netDataBytes = 0;
     int appDataBytes = 0;
+    JSONArray netData;
+    String appData = "";
 
-    // Length for sending limited config
-    if (msgBody.getJSONArray("net_data").length() == 1) {
-      netDataBytes = 3;
-      //System.out.println("******Pocitam s KRATKIMI network datami");
+    try {
+      netData = msgBody.getJSONArray("net_data");
+
+      // Length for sending limited config
+      if (netData.length() == 1) {
+        netDataBytes = 3;
+        //System.out.println("******Pocitam s KRATKIMI network datami");
+      } else if (netData.length() > 1) {
+        netDataBytes = 11 + 5;
+        //System.out.println("******Pocitam s DLHIMY network datami");
+      }
+    } catch (JSONException e) {
+      System.out.println("Network data are not present");
     }
 
-    // Length for sending full config
-    if (msgBody.getJSONArray("net_data").length() > 1) {
-      netDataBytes = 11 + 5;
-      //System.out.println("******Pocitam s DLHIMY network datami");
+    try {
+      appData = msgBody.getString("app_data");
+    } catch (JSONException e) {
+      System.out.println("App data are not present");
     }
-
-    String appData = msgBody.getString("app_data");
 
     if (!appData.equals("")) {
       appDataBytes = (appData.length() * 3 / 4) + 1;
@@ -387,7 +399,7 @@ public class EDProcessor {
     int blockSizeOverhead = Integer.valueOf(appDataBytes + netDataBytes + payloadOverhead) % Integer.valueOf(4);
     System.out.println("Block size overhead is: " + blockSizeOverhead);
     //counts the formula, when all data are present
-    float symbolTime = (float) Math.pow(2, spf) / (bandwidth / 1000);
+    float symbolTime = (float) Math.pow(2, spf) / ((float) bandwidth / 1000);
     //System.out.println("****************************Symboltime je: "+Symboltime);
     int msgSymbols  = (int) 8 + ((8 * (netDataBytes + appDataBytes + loraFiitOverheadBytes + payloadOverhead + blockSizeOverhead) - 4 * spf + 28 + 16 ) / (4 * (spf-2))) * (cr + 4);
     //System.out.println("****************************Msg symbolcount je :"+MsgSymbols);

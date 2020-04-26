@@ -30,6 +30,7 @@ upstream_power INT,
 downstream_Power INT,
 spf INT,
 duty_cycle_refresh TIME,
+stat_model JSON,
 application_id int REFERENCES applications(id) NOT NULL,
 transmission_param_id int REFERENCES transmission_params(id) NOT NULL
 );
@@ -44,6 +45,7 @@ channels_num INT,
 duty_cycle_refresh TIME,
 lora_protocol VARCHAR(50),
 lora_protocol_ver VARCHAR(50),
+stat_model JSON,
 transmission_param_id INT REFERENCES transmission_params(id) NOT NULL
 );
 
