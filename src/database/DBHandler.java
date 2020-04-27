@@ -336,17 +336,6 @@ public class DBHandler {
         preparedStmt.executeUpdate();
         System.out.println("Node power updated to " + newPower + " and SF to " + newSpf);
         return true;
-      } else {
-        // Inform admin about physical limits
-        if (newPower <= 4) {
-          System.out.println("Could not decrease PWR to " + newPower + ".");
-          System.out.println("Value too low!");
-        }
-
-        if (newSpf <= 6) {
-          System.out.println("Could not decrease SF to " + newSpf + ".");
-          System.out.println("Value too low!");
-        }
       }
       return false;
     } catch (Exception e) {
@@ -371,6 +360,7 @@ public class DBHandler {
       if (newPower <= maxPower && newSpf <= maxSPF) {
         preparedStmt = conn.prepareStatement("UPDATE nodes SET upstream_power = ?, spf = ? WHERE id = ?");
         preparedStmt.setInt(1, newPower);
+        preparedStmt.setInt(2, newSpf);
         preparedStmt.setString(3, nodeId);
         preparedStmt.executeUpdate();
         System.out.println("Node power updated to " + newPower + " and SPF to " + newSpf);
