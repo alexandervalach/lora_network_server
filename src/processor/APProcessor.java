@@ -16,13 +16,14 @@ import java.util.ArrayList;
  * @version 1.0
  */
 public class APProcessor {
-  private ProgramResources programResources;
-  private int maxPower;
-  private int apTransmissionParamId;
-  private int edTransmissionParamId;
-  private int downSFSensitivity;
-  private int downPowerSensitivity;
-  private int maxSpf;
+  private final ProgramResources programResources;
+  private final int maxPower;
+  private final int apTransmissionParamId;
+  private final int edTransmissionParamId;
+  private final int downSFSensitivity;
+  private final int downPowerSensitivity;
+  private final int maxSpf;
+  private final String algorithm;
 
   /**
    * Constructor
@@ -36,6 +37,7 @@ public class APProcessor {
     this.downSFSensitivity = programResources.props.getInt("LoRaSettings.powerDownSpfRssiSensitivityBoundary");
     this.downPowerSensitivity = programResources.props.getInt("LoRaSettings.powerDownPowerRssiSensitivityBoundary");
     this.maxSpf = programResources.props.getInt("LoRaSettings.maxSpf");
+    this.algorithm = programResources.props.getStr("ServerSetting.algorithm");
     System.out.println("Access Point Processor created successfully!");
   }
 
@@ -193,7 +195,7 @@ public class APProcessor {
       int Transmission_PARAM_ID = edTransmissionParamId;
 
       // Writes node into DB
-      programResources.dbHandler.WriteNode(
+      programResources.dbHandler.writeNode(
         primary.getString("dev_id"),
         upPw,
         downPw,

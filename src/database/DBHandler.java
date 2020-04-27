@@ -2,6 +2,7 @@ package database;
 
 import core.DateManager;
 import core.ProgramResources;
+import org.json.JSONException;
 import org.json.JSONObject;
 import org.postgresql.util.PSQLException;
 
@@ -10,6 +11,7 @@ import java.sql.*;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 
 /**
  * Handles database connection, read and write operations
@@ -134,6 +136,18 @@ public class DBHandler {
     }
   }
 
+  public void updateSequence(String id, int lastSeq) {
+    try {
+      preparedStmt = conn.prepareStatement("UPDATE nodes SET last_seq = ? WHERE id = ?");
+      preparedStmt.setInt(1, lastSeq);
+      preparedStmt.setString(2, id);
+      preparedStmt.executeUpdate();
+      System.out.println("SEQ updated to " + lastSeq + " for node " + id);
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
+  }
+
   /**
    * Writes new uplink message into DB
    * */
@@ -171,8 +185,34 @@ public class DBHandler {
     }
   }
 
+  public void bulkInsertUplinkMessages (ArrayList<JSONObject> currentGrape, JSONObject primary, int msgGroupId, int msgTypeId) throws JSONException {
+    // Saves all messages into DB
+    // TODO: Make bulk insert as a transcation
+    for (JSONObject message : currentGrape) {
+      this.writeUplinkMsg(
+        message.getString("data"),
+        Float.parseFloat(message.getString("snr")),
+        Float.parseFloat(message.getString("rssi")),
+        message.getInt("duty_c"),
+        message.toString().equals(primary.toString()),
+        DateManager.getTimestamp(),
+        msgGroupId,
+        message.getInt("seq"),
+        Float.parseFloat(message.getString("freq")),
+        message.getInt("sf"),
+        message.getInt("power"),
+        message.getInt("time"),
+        message.getString("cr"),
+        message.getInt("band"),
+        msgTypeId,
+        message.getString("hWIdentifier"),
+        message.getString("dev_id")
+      );
+    }
+  }
+
   // Writes new node into DB
-  public void WriteNode(String id, int upPower, int downPower, int spf, String formattedDate,
+  public void writeNode(String id, int upPower, int downPower, int spf, String formattedDate,
                         int appId, int transmissionParam) {
     if (this.endNodeExists(id)) {
       System.out.println("Node with ID " + id + " already exists");
@@ -296,6 +336,17 @@ public class DBHandler {
         preparedStmt.executeUpdate();
         System.out.println("Node power updated to " + newPower + " and SF to " + newSpf);
         return true;
+      } else {
+        // Inform admin about physical limits
+        if (newPower <= 4) {
+          System.out.println("Could not decrease PWR to " + newPower + ".");
+          System.out.println("Value too low!");
+        }
+
+        if (newSpf <= 6) {
+          System.out.println("Could not decrease SF to " + newSpf + ".");
+          System.out.println("Value too low!");
+        }
       }
       return false;
     } catch (Exception e) {
@@ -320,7 +371,6 @@ public class DBHandler {
       if (newPower <= maxPower && newSpf <= maxSPF) {
         preparedStmt = conn.prepareStatement("UPDATE nodes SET upstream_power = ?, spf = ? WHERE id = ?");
         preparedStmt.setInt(1, newPower);
-        preparedStmt.setInt(2, newSpf);
         preparedStmt.setString(3, nodeId);
         preparedStmt.executeUpdate();
         System.out.println("Node power updated to " + newPower + " and SPF to " + newSpf);
