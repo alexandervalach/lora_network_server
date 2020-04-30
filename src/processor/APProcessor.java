@@ -3,6 +3,7 @@ package processor;
 import connection.SocketThread;
 import core.DateManager;
 import core.ProgramResources;
+import helpers.MessageHelper;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -249,12 +250,14 @@ public class APProcessor {
       // Builds the reply message
       REGAmsg.put("message_name","REGA");
       REGAmsg.put("message_body", messageBody);
+
+      messageBody.put("time", MessageHelper.getMsgCost(messageBody, primary.getInt("sf"), primary.getInt("band")));
+
       System.out.println("New REGA msg created for AP: " + REGAmsg);
       // Sends answer do desired AP
       this.programResources.sslConnection.socketThreadArrayList.get(apIdentifier).write(REGAmsg.toString());
     } catch (Exception e) {
-      e.printStackTrace();;
+      e.printStackTrace();
     }
-
   }
 }

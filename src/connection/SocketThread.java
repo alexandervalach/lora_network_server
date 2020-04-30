@@ -52,6 +52,7 @@ public class SocketThread extends Thread
         processThread.putToQueue(inData);
       } catch (IOException | InterruptedException e) {
         e.printStackTrace();
+        // System.out.println("Connection closed");
         break;
       }
     }
