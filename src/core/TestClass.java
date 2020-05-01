@@ -22,8 +22,8 @@ public class TestClass {
       //process(null, testujRXL, true, 99999);
       //process(null, testujRXL3, true, 88888); //iny
       //process(null, testujRXL2, true, 88888);
-      programResources.loRaConcentrator.catchMsg(new JSONObject(testujRXL), 4,"fiitap2", false);
-      programResources.loRaConcentrator.catchMsg(new JSONObject(testujRXL2), 4,"fiitap2", false);
+      programResources.loRaConcentrator.catchMsg(new JSONObject(testujRXL), 4,"fiitap2", "normal");
+      programResources.loRaConcentrator.catchMsg(new JSONObject(testujRXL2), 4,"fiitap2", "normal");
     } catch (Exception e) {
       e.printStackTrace();
     }
@@ -32,7 +32,7 @@ public class TestClass {
   public static void test1 (ProgramResources resources) {
     try {
       String regrMessage = "{\"band\":125000,\"cr\":\"4/5\",\"dev_id\":\"11111aaa\",\"duty_c\":14475,\"rssi\":-69.0,\"sf\":9,\"snr\":13.5,\"time\":1575200615604},\"message_name\":\"REGR\"}";
-      resources.loRaConcentrator.catchMsg(new JSONObject(regrMessage),  1, "99999ff", true);
+      resources.loRaConcentrator.catchMsg(new JSONObject(regrMessage),  1, "99999ff", "reg");
     } catch (Exception e) {
       System.out.println("TEST FAILED");
       e.printStackTrace();

@@ -37,22 +37,24 @@ public class MessageController implements SocketListener {
     try {
       JSONObject jsonMessage = new JSONObject(message);
       // Calls service program according to message type
+      JSONObject messageBody = jsonMessage.getJSONObject("message_body");
+      String type;
+
       switch (jsonMessage.getString("message_name")) {
         case "RXL":
-          programResources.loRaConcentrator.catchMsg(jsonMessage.getJSONObject("message_body"), apIdentifier, st.gethWIdentifier(), false);
-          break;
         case "REGR":
-          programResources.loRaConcentrator.catchMsg(jsonMessage.getJSONObject("message_body"), apIdentifier, st.gethWIdentifier(), true);
+          type = messageBody.getString("type");
+          programResources.loRaConcentrator.catchMsg(messageBody, apIdentifier, st.gethWIdentifier(), type);
           break;
         case "KEYR":
-          JSONObject responseKEYR = programResources.apProcessor.processKEYR(jsonMessage.getJSONObject("message_body"));
+          JSONObject responseKEYR = programResources.apProcessor.processKEYR(messageBody);
           st.write(responseKEYR.toString());
           break;
         case "KEYS":
-          programResources.apProcessor.processKEYS(jsonMessage.getJSONObject("message_body"));
+          programResources.apProcessor.processKEYS(messageBody);
           break;
         case "SETR":
-          programResources.apProcessor.processSETR(jsonMessage.getJSONObject("message_body"), st);
+          programResources.apProcessor.processSETR(messageBody, st);
           break;
         default:
           break;

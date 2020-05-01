@@ -29,18 +29,24 @@ public class LoRaConcentrator {
    * @param jsonObject
    * @param apIdentifier
    * @param hWID
-   * @param isRegistration
+   * @param type
    * @throws Exception
    */
-  public void catchMsg(JSONObject jsonObject, int apIdentifier, String hWID, boolean isRegistration) throws Exception {
+  public void catchMsg(JSONObject jsonObject, int apIdentifier, String hWID, String type) throws Exception {
     // Appends the JSON with internal AP identifier for future callback
     jsonObject.put("apIdentifier", apIdentifier);
     jsonObject.put("hWIdentifier", hWID);
     ArrayList<JSONObject> myGrape;
+
+    boolean isRegistration = type.equals("reg");
+    // Builds string hashkey
     String key;
 
-    // Builds string hashkey
-    key = isRegistration ? jsonObject.getString("dev_id") : jsonObject.getString("data") + jsonObject.getString("dev_id");
+    if (isRegistration) {
+      key = jsonObject.getString("dev_id");
+    } else {
+      key = jsonObject.getString("data") + jsonObject.getString("dev_id");
+    }
 
     synchronized (matchingTable) {
       myGrape = matchingTable.get(key);
@@ -55,7 +61,7 @@ public class LoRaConcentrator {
         matchingTable.put(key, myGrape);
       }
       // Starts synchronization timer
-      new ConcentratorDeadTimer(key, this, isRegistration).start();
+      new ConcentratorDeadTimer(key, this, type).start();
     } else {
       // Message already caught from different AP, appends the message
       myGrape.add(jsonObject);
