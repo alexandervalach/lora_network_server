@@ -124,6 +124,10 @@ public class EDProcessor {
 
       if (this.algorithm.equals("adr")) {
         messageBody = this.adrAlgorithm(primary, finalRssi, finalSnr);
+      } else if (this.algorithm.equals("ts")) {
+        messageBody = this.tsAlgorithm(primary, finalRssi, finalSnr);
+      } else if (this.algorithm.equals("usb")) {
+        messageBody = this.ucbAlgorithm(primary, finalRssi, finalSnr);
       }
 
       if (messageBody != null) {
@@ -315,6 +319,66 @@ public class EDProcessor {
       }
     }
     return powerChanged;
+  }
+
+  private JSONObject tsAlgorithm (JSONObject primary, int finalRssi, int finalSnr) throws JSONException {
+    String ackType = primary.getString("ack");
+
+    if (ackType.equals("UNSUPPORTED")) {
+      return null;
+    }
+
+    int sf = primary.getInt("sf");
+    String devId = primary.getString("dev_id");
+
+    JSONObject message = new JSONObject();
+    JSONObject messageBody = new JSONObject();
+    JSONArray statModel = new JSONArray();
+
+    message.put("message_name", "TXL");
+    messageBody.put("net_data", statModel);
+    messageBody.put("dev_id", devId);
+    message.put("message_body", messageBody);
+
+    try {
+      messageBody.put("time", MessageHelper.getMsgCost(messageBody, sf, primary.getInt("band")));
+    } catch (Exception e) {
+      System.out.println("Unable to calculate airtime for downlink message");
+      e.printStackTrace();
+      return null;
+    }
+
+    return messageBody;
+  }
+
+  private JSONObject ucbAlgorithm (JSONObject primary, int finalRssi, int finalSnr) throws JSONException {
+    String ackType = primary.getString("ack");
+
+    if (ackType.equals("UNSUPPORTED")) {
+      return null;
+    }
+
+    int sf = primary.getInt("sf");
+    String devId = primary.getString("dev_id");
+
+    JSONObject message = new JSONObject();
+    JSONObject messageBody = new JSONObject();
+    JSONArray statModel = new JSONArray();
+
+    message.put("message_name", "TXL");
+    messageBody.put("net_data", statModel);
+    messageBody.put("dev_id", devId);
+    message.put("message_body", messageBody);
+
+    try {
+      messageBody.put("time", MessageHelper.getMsgCost(messageBody, sf, primary.getInt("band")));
+    } catch (Exception e) {
+      System.out.println("Unable to calculate airtime for downlink message");
+      e.printStackTrace();
+      return null;
+    }
+
+    return messageBody;
   }
 
   private JSONObject adrAlgorithm (JSONObject primary, int finalRssi, int finalSnr) throws JSONException {

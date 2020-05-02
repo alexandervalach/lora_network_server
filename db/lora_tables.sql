@@ -30,7 +30,7 @@ upstream_power INT,
 downstream_Power INT,
 spf INT,
 duty_cycle_refresh TIME,
-stat_model JSON,
+stat_model JSON DEFAULT '[{"sf": 7, "pw": 10, "rw": 8}, {"sf": 7, "pw": 11, "rw": 8}, {"sf": 7, "pw": 12, "rw": 8}, {"sf": 7, "pw": 13, "rw": 8}, {"sf": 7, "pw": 14, "rw": 8}, {"sf": 7, "pw": 15, "rw": 9}, {"sf": 8, "pw": 10, "rw": 8}, {"sf": 8, "pw": 11, "rw": 8}, {"sf": 8, "pw": 12, "rw": 8}, {"sf": 8, "pw": 13, "rw": 8}, {"sf": 8, "pw": 14, "rw": 8}, {"sf": 8, "pw": 15, "rw": 9}, {"sf": 9, "pw": 10, "rw": 8}, {"sf": 9, "pw": 11, "rw": 8}, {"sf": 9, "pw": 12, "rw": 8}, {"sf": 9, "pw": 13, "rw": 8}, {"sf": 9, "pw": 14, "rw": 9}, {"sf": 10, "pw": 10, "rw": 8}, {"sf": 10, "pw": 11, "rw": 8}, {"sf": 10, "pw": 12, "rw": 8}, {"sf": 10, "pw": 13, "rw": 8}, {"sf": 10, "pw": 14, "rw": 8}, {"sf": 10, "pw": 15, "rw": 9}, {"sf": 11, "pw": 10, "rw": 8}, {"sf": 11, "pw": 11, "rw": 8}, {"sf": 11, "pw": 12, "rw": 8}, {"sf": 11, "pw": 13, "rw": 8}, {"sf": 11, "pw": 14, "rw": 8}, {"sf": 11, "pw": 15, "rw": 9}, {"sf": 12, "pw": 10, "rw": 8}, {"sf": 12, "pw": 11, "rw": 8}, {"sf": 12, "pw": 12, "rw": 8}, {"sf": 12, "pw": 13, "rw": 8}, {"sf": 12, "pw": 14, "rw": 8}, {"sf": 12, "pw": 15, "rw": 10}]',
 application_id int REFERENCES applications(id) NOT NULL,
 transmission_param_id int REFERENCES transmission_params(id) NOT NULL
 );
@@ -45,7 +45,7 @@ channels_num INT,
 duty_cycle_refresh TIME,
 lora_protocol VARCHAR(50),
 lora_protocol_ver VARCHAR(50),
-stat_model JSON,
+stat_model JSON DEFAULT '[{"sf": 7, "pw": 10, "rw": 8}, {"sf": 7, "pw": 11, "rw": 8}, {"sf": 7, "pw": 12, "rw": 8}, {"sf": 7, "pw": 13, "rw": 8}, {"sf": 7, "pw": 14, "rw": 8}, {"sf": 7, "pw": 15, "rw": 9}, {"sf": 8, "pw": 10, "rw": 8}, {"sf": 8, "pw": 11, "rw": 8}, {"sf": 8, "pw": 12, "rw": 8}, {"sf": 8, "pw": 13, "rw": 8}, {"sf": 8, "pw": 14, "rw": 8}, {"sf": 8, "pw": 15, "rw": 9}, {"sf": 9, "pw": 10, "rw": 8}, {"sf": 9, "pw": 11, "rw": 8}, {"sf": 9, "pw": 12, "rw": 8}, {"sf": 9, "pw": 13, "rw": 8}, {"sf": 9, "pw": 14, "rw": 9}, {"sf": 10, "pw": 10, "rw": 8}, {"sf": 10, "pw": 11, "rw": 8}, {"sf": 10, "pw": 12, "rw": 8}, {"sf": 10, "pw": 13, "rw": 8}, {"sf": 10, "pw": 14, "rw": 8}, {"sf": 10, "pw": 15, "rw": 9}, {"sf": 11, "pw": 10, "rw": 8}, {"sf": 11, "pw": 11, "rw": 8}, {"sf": 11, "pw": 12, "rw": 8}, {"sf": 11, "pw": 13, "rw": 8}, {"sf": 11, "pw": 14, "rw": 8}, {"sf": 11, "pw": 15, "rw": 9}, {"sf": 12, "pw": 10, "rw": 8}, {"sf": 12, "pw": 11, "rw": 8}, {"sf": 12, "pw": 12, "rw": 8}, {"sf": 12, "pw": 13, "rw": 8}, {"sf": 12, "pw": 14, "rw": 8}, {"sf": 12, "pw": 15, "rw": 10}]',
 transmission_param_id INT REFERENCES transmission_params(id) NOT NULL
 );
 
