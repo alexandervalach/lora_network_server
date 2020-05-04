@@ -13,7 +13,7 @@ import java.io.PrintStream;
  * Loads all other resources
  * @author Karol Cagáň
  * @author Alexander Valach
- * @version 1.0
+ * @version 0.3
  */
 public class ProgramResources {
   // Program resources definition
@@ -26,7 +26,7 @@ public class ProgramResources {
 
   /**
    * Program resources initialization
-   * @param test
+   * @param test decides whether test or other environment
    */
   public ProgramResources(boolean test) {
     try {

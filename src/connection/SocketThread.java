@@ -6,28 +6,29 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.concurrent.LinkedBlockingQueue;
 
 /**
  * Creates socket thread for listening
  * @author Karol Cagáň
- * @version 1.0
+ * @version 0.3
  */
 public class SocketThread extends Thread
 {
   public volatile boolean running = true;
-  private Socket socket;
+  private final Socket socket;
   private OutputStream outStream = null;
   private InputStream inStream = null;
-  private ProcessThread processThread;
+  private final ProcessThread processThread;
   private String hWIdentifier;
-  private int internalIdentifier;
+  private final int internalIdentifier;
 
   /**
    * Constructor for new instance
-   * @param socket
-   * @param listener
-   * @param id
+   * @param socket instance of socket
+   * @param listener instance of socket listener
+   * @param id internal ap identifier
    */
   public SocketThread(Socket socket, SocketListener listener, int id) {
     this.socket = socket;
@@ -72,26 +73,27 @@ public class SocketThread extends Thread
 
   /**
    * Sends downlink message to AP
-   * @param jsonText
+   * @param jsonText json message as a string
    * @throws IOException
    */
   public void write(String jsonText) throws IOException {
     outStream = socket.getOutputStream();
-    outStream.write(jsonText.getBytes(Charset.forName("UTF-8")));
+    outStream.write(jsonText.getBytes(StandardCharsets.UTF_8));
   }
 
   /**
    * hWIdentifier serves for downlink AP identification
    * @return String
    */
-  public String gethWIdentifier() {
+  public String getHwIdentifier() {
     return hWIdentifier;
   }
 
   /**
-   * @param hWIdentifier
+   * Setter for ap identifier
+   * @param hWIdentifier access point id
    */
-  public void sethWIdentifier(String hWIdentifier) {
+  public void setHwIdentifier(String hWIdentifier) {
     this.hWIdentifier = hWIdentifier;
   }
 

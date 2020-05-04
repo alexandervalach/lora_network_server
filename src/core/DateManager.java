@@ -8,12 +8,12 @@ import java.util.Date;
 /**
  * Date and time helper
  * @author Karol Cagáň
- * @version 1.0
+ * @version 0.3
  */
 public class DateManager {
   /**
    * Returns date as the posted format
-   * @param formatter
+   * @param formatter string datetime format
    * @return String
    */
   public static String formatDate(String formatter) {

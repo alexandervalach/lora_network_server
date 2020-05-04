@@ -12,11 +12,11 @@ import java.util.ArrayList;
 /**
  * Manages secure connection with AP
  * @author Karol Cagáň
- * @version 1.0
+ * @version 0.3
  */
 public class SSLConnection extends Thread {
-  private ServerSocket ss;
-  private SocketListener messageController;
+  private final ServerSocket ss;
+  private final SocketListener messageController;
   public ArrayList<SocketThread> socketThreadArrayList;
   private ProgramResources programResources;
   private int apIterator;
@@ -51,13 +51,16 @@ public class SSLConnection extends Thread {
         System.out.println("New AP detected on link!");
         SocketThread st = new SocketThread(s, messageController, apIterator);
 
-        if (st != null) {
-          // New AP added into list of AP-s
-          socketThreadArrayList.add(apIterator, st);
-          apIterator++;
-          st.start();
-        }
+        // New AP added into list of AP-s
+        socketThreadArrayList.add(apIterator, st);
+        apIterator++;
+        st.start();
       } catch (IOException e) {
+        try {
+          this.shutdown();
+        } catch (Exception exception) {
+          exception.printStackTrace();
+        }
         e.printStackTrace();
       }
     }
@@ -66,7 +69,7 @@ public class SSLConnection extends Thread {
   /**
    * Shutdown function
    */
-  public void Shutdown() throws Exception {
+  public void shutdown() throws Exception {
     for (SocketThread socketThread : socketThreadArrayList) {
       socketThread.running = false;
     }

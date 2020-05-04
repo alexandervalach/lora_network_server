@@ -7,7 +7,7 @@ import java.util.Properties;
 /**
  * Reads from and writes values to configuration file
  * @author Karol Cagáň
- * @version 1.0
+ * @version 0.3
  */
 public class Props {
   private ProgramResources programResources;
@@ -15,7 +15,7 @@ public class Props {
 
   /**
    * Constructor, loads properties
-   * @param programResources
+   * @param programResources instance of program resources
    */
   public Props(ProgramResources programResources) {
     try {
@@ -32,7 +32,7 @@ public class Props {
 
   /**
    * Get property as String
-   * @param propertyName
+   * @param propertyName property name from config file
    * @return String
    */
   public String getStr(String propertyName) {
@@ -41,7 +41,7 @@ public class Props {
 
   /**
    * Get property as int
-   * @param propertyName
+   * @param propertyName propery name from config file
    * @return String
    */
   public int getInt(String propertyName) {

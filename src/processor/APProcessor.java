@@ -14,38 +14,35 @@ import java.util.ArrayList;
 /**
  * AP processing logic
  * @author Karol Cagáň
- * @version 1.0
+ * @version 0.3
  */
-public class APProcessor {
-  private final ProgramResources programResources;
+public class APProcessor extends NodeProcessor {
   private final int maxPower;
   private final int apTransmissionParamId;
   private final int edTransmissionParamId;
   private final int downSFSensitivity;
   private final int downPowerSensitivity;
   private final int maxSpf;
-  private final String algorithm;
 
   /**
    * Constructor
-   * @param programResources
+   * @param programResources instance of basic program resources
    */
   public APProcessor(ProgramResources programResources) {
-    this.programResources = programResources;
+    super(programResources);
     this.maxPower = programResources.props.getInt("LoRaSettings.maxPower");
     this.apTransmissionParamId = programResources.props.getInt("LoRaSettings.apTransmissionParamId");
     this.edTransmissionParamId = programResources.props.getInt("LoRaSettings.edTransmissionParamId");
     this.downSFSensitivity = programResources.props.getInt("LoRaSettings.powerDownSpfRssiSensitivityBoundary");
     this.downPowerSensitivity = programResources.props.getInt("LoRaSettings.powerDownPowerRssiSensitivityBoundary");
     this.maxSpf = programResources.props.getInt("LoRaSettings.maxSpf");
-    this.algorithm = programResources.props.getStr("ServerSetting.algorithm");
     System.out.println("Access Point Processor created successfully!");
   }
 
   /**
    * Processes SETR messages
-   * @param jsonobject
-   * @param st
+   * @param jsonobject json STIoT message
+   * @param st instance of thread
    */
   public void processSETR(JSONObject jsonobject, SocketThread st) {
     // Version 1.0 only supports static params for each AP configuration, change here
@@ -66,7 +63,7 @@ public class APProcessor {
       );
 
       // Writes HW ID into software handler thread
-      st.sethWIdentifier(jsonobject.getString("id"));
+      st.setHwIdentifier(jsonobject.getString("id"));
 
       // Gets transmission param for AP from DB
       JSONObject params = new JSONObject(programResources.dbHandler.readTransmissionParams(transmissionParamId));
@@ -109,11 +106,15 @@ public class APProcessor {
 
   /**
    * Process key from KEYS
-   * @param jsonobject
+   * @param jsonobject json STIoT message
    */
   public void processKEYS(JSONObject jsonobject) {
     try {
-      programResources.dbHandler.writeKey(jsonobject.getString("dev_id"), jsonobject.getInt("seq"), jsonobject.getString("key"));
+      programResources.dbHandler.writeKey(
+              jsonobject.getString("dev_id"),
+              jsonobject.getInt("seq"),
+              jsonobject.getString("key")
+      );
     } catch (JSONException e) {
       e.printStackTrace();
     }
@@ -121,7 +122,7 @@ public class APProcessor {
 
   /**
    * Returns encryption key
-   * @param jsonobject
+   * @param jsonobject json message
    * @return JSONObject
    */
   public JSONObject processKEYR(JSONObject jsonobject) {
@@ -150,28 +151,16 @@ public class APProcessor {
 
   /**
    * Process registration request
-   * @param currentGrape
+   * @param currentGrape array list of message replicas
    */
   public void processREGR(ArrayList<JSONObject> currentGrape) {
     String preSharedKey = programResources.props.getStr("APProcessor.preSharedKey");
-    // System.out.println("Pre Shared Key: " + preSharedKey);
 
-    try{
+    try {
       System.out.println("Registering batch " + currentGrape.toString());
 
       // Determines which message is used as primary
-      JSONObject primary = null;
-
-      for (JSONObject jsonObject : currentGrape) {
-        if (primary == null) {
-          primary = jsonObject;
-        } else {
-          // Determine the best downlink candidate
-          if (programResources.edProcessor.getMetric(primary.getInt("rssi"), primary.getInt("duty_c"))<programResources.edProcessor.getMetric(jsonObject.getInt("rssi"), jsonObject.getInt("duty_c"))) {
-            primary = jsonObject;
-          }
-        }
-      }
+      JSONObject primary = this.getPrimaryMessage(currentGrape);
       int apIdentifier = primary.getInt("apIdentifier");
 
       // If message is received with exceptional quality decreases up power already, otherwise set power to max
@@ -208,11 +197,39 @@ public class APProcessor {
 
       // Preparing response
       JSONObject REGAmsg = new JSONObject();
+      JSONObject messageBody;
 
-      //gets transmission param for AP from DB
+      if (this.isBanditAlgorithm) {
+        messageBody = this.apBanditConfiguration(apIdentifier);
+      } else {
+        messageBody = this.adrConfiguration(primary, preSharedKey, spf, upPw, Transmission_PARAM_ID);
+      }
+
+      if (messageBody == null) {
+        System.out.print("There was an error processing downlink message body");
+        return;
+      }
+
+      // Builds the reply message
+      REGAmsg.put("message_name","REGA");
+      REGAmsg.put("message_body", messageBody);
+
+      messageBody.put("time", MessageHelper.getMsgCost(messageBody, primary.getInt("sf"), primary.getInt("band")));
+
+      System.out.println("New REGA msg created for AP: " + REGAmsg);
+      // Sends answer do desired AP
+      this.programResources.sslConnection.socketThreadArrayList.get(apIdentifier).write(REGAmsg.toString());
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
+  }
+
+  public JSONObject adrConfiguration (JSONObject primary, String preSharedKey, int spf, int upPw, int Transmission_PARAM_ID) {
+    try {
+      // Gets transmission param for AP from DB
       JSONObject params = new JSONObject(programResources.dbHandler.readTransmissionParams(Transmission_PARAM_ID));
 
-      //builds transmission param array
+      // Builds transmission param array
       JSONObject normalParam = new JSONObject();
       normalParam.put("sf", spf);
       normalParam.put("cr", params.get("coderate"));
@@ -233,13 +250,13 @@ public class APProcessor {
       regParam.put("power", maxPower); // Fixed max power for reg Bcast
       regParam.put("freqs", params.get("registration_freq"));
 
-      //creates an array of params as a response
+      // Creates an array of params as a response
       JSONArray netData = new JSONArray();
       netData.put(emerParam);
       netData.put(normalParam);
       netData.put(regParam);
 
-      //creates response body
+      // Creates response body
       JSONObject messageBody = new JSONObject();
       messageBody.put("dev_id", primary.getString("dev_id"));
       messageBody.put("power", upPw);
@@ -247,17 +264,13 @@ public class APProcessor {
       messageBody.put("app_data", ""); // Version 1.0 does not support app data on first downlink message
       messageBody.put("net_data", netData);
 
-      // Builds the reply message
-      REGAmsg.put("message_name","REGA");
-      REGAmsg.put("message_body", messageBody);
-
-      messageBody.put("time", MessageHelper.getMsgCost(messageBody, primary.getInt("sf"), primary.getInt("band")));
-
-      System.out.println("New REGA msg created for AP: " + REGAmsg);
-      // Sends answer do desired AP
-      this.programResources.sslConnection.socketThreadArrayList.get(apIdentifier).write(REGAmsg.toString());
-    } catch (Exception e) {
-      e.printStackTrace();
+      return messageBody;
+    } catch (JSONException e) {
+      return null;
     }
+  }
+
+  public void updateBandits(ArrayList<JSONObject> currentGrape) {
+
   }
 }

@@ -13,9 +13,9 @@ import java.util.ArrayList;
  * EN processing logic
  * @author Karol Cagáň
  * @author Alexander Valach
- * @version 1.0
+ * @version 0.3
  */
-public class EDProcessor {
+public class EDProcessor extends NodeProcessor {
   private final ProgramResources programResources;
   private final int maxPower;
   private final int edTransmissionParamId;
@@ -25,19 +25,14 @@ public class EDProcessor {
   private final int upPwSensitivity;
   private final int maxSpf;
   private final int seqTolerance;
-  private final int maxDutyMillis;
   private final int snrSensitivity;
-  private final int dutyCycleSensitivity;
-  private final int dutyCycleRestriction;
-  private final int sensitivityPoison;
-  private final int restrictionPoison;
-  private final String algorithm;
 
   /**
    * Constructor
    * @param programResources collects all required resources
    */
   public EDProcessor(ProgramResources programResources) {
+    super(programResources);
     this.programResources = programResources;
     this.maxPower = programResources.props.getInt("LoRaSettings.maxPower");
     this.edTransmissionParamId = programResources.props.getInt("LoRaSettings.edTransmissionParamId");
@@ -53,7 +48,6 @@ public class EDProcessor {
     this.dutyCycleSensitivity = programResources.props.getInt("LoRaSettings.dutyCycleSensitivityBoundary");
     this.sensitivityPoison = programResources.props.getInt("LoRaSettings.dutyCycleSensitivityPoisonRssiValue");
     this.restrictionPoison = programResources.props.getInt("LoRaSettings.dutyCycleRestrictionPoisonRssiValue");
-    this.algorithm = programResources.props.getStr("ServerSetting.algorithm");
   }
 
   /**
@@ -120,98 +114,69 @@ public class EDProcessor {
       programResources.dbHandler.bulkInsertUplinkMessages(currentGrape, primary, msgGroupId, msgTypeId);
 
       //---COMMUNICATION PARAMS ALGORITHM SELECTION
-      JSONObject messageBody = new JSONObject();
+      JSONObject messageBody;
 
-      if (this.algorithm.equals("adr")) {
+      if (!this.isBanditAlgorithm) {
         messageBody = this.adrAlgorithm(primary, finalRssi, finalSnr);
-      } else if (this.algorithm.equals("ts")) {
-        messageBody = this.tsAlgorithm(primary, finalRssi, finalSnr);
-      } else if (this.algorithm.equals("usb")) {
+      } else {
         messageBody = this.ucbAlgorithm(primary, finalRssi, finalSnr);
       }
 
-      if (messageBody != null) {
-        JSONObject txlMsg = new JSONObject();
-        txlMsg.put("message_name", "TXL");
-        txlMsg.put("message_body", messageBody);
+      if (messageBody == null) {
+        System.out.print("There was an error processing downlink message body");
+        return;
+      }
 
-        System.out.println("New TXL reply for AP");
-        System.out.println(txlMsg);
+      JSONObject txlMsg = new JSONObject();
+      txlMsg.put("message_name", "TXL");
+      txlMsg.put("message_body", messageBody);
 
-        // Checks for duty Cycle duration of a message
-        int remainingDutyC = 0;
+      System.out.println("New TXL reply for AP");
+      System.out.println(txlMsg);
 
-        try {
-          remainingDutyC = this.getRemainingDutyCycle(messageBody, primary.getInt("sf"), primary.getInt("band"), primary.getInt("duty_c"));
-        } catch (Exception e) {
-          System.out.println("There was a problem during duty cycle recalculation");
-        }
+      // Checks for duty Cycle duration of a message
+      int remainingDutyC = 0;
 
-        // Sends message to desired AP
-        int apIdentifier = primary.getInt("apIdentifier");
+      try {
+        remainingDutyC = this.getRemainingDutyCycle(messageBody, primary.getInt("sf"), primary.getInt("band"), primary.getInt("duty_c"));
+      } catch (Exception e) {
+        System.out.println("There was a problem during duty cycle recalculation");
+      }
 
-        if (remainingDutyC > 0) {
-          JSONObject rawResponse = new JSONObject(programResources.dbHandler.readDownlinkMsg(devId));
-          this.programResources.sslConnection.socketThreadArrayList.get(apIdentifier).write(txlMsg.toString());
-          System.out.println("****** Raw response " + rawResponse.toString());
+      // Sends message to desired AP
+      int apIdentifier = primary.getInt("apIdentifier");
 
-          if (rawResponse.toString().equals("{}")) {
-            // Write new message and send it to AP
-            this.programResources.dbHandler.writeSentDownlinkMsg(
-                    messageBody.getString("app_data"),
-                    messageBody.getString("net_data"),
-                    remainingDutyC,
-                    Float.parseFloat(primary.getString("freq")),
-                    primary.getInt("sf"),
-                    messageBody.getInt("power"),
-                    primary.getInt("time"),
-                    primary.getString("cr"),
-                    primary.getInt("band"),
-                    primary.getString("hWIdentifier"),
-                    messageBody.getString("dev_id")
-            );
-          } else {
-            // Marks messages as sent in DB
-            this.programResources.dbHandler.markDownlinkAsSent(rawResponse.getInt("id"), remainingDutyC);
-          }
+      if (remainingDutyC > 0) {
+        JSONObject rawResponse = new JSONObject(programResources.dbHandler.readDownlinkMsg(devId));
+        this.programResources.sslConnection.socketThreadArrayList.get(apIdentifier).write(txlMsg.toString());
+        System.out.println("****** Raw response " + rawResponse.toString());
+
+        if (rawResponse.toString().equals("{}")) {
+          // Write new message and send it to AP
+          this.programResources.dbHandler.writeSentDownlinkMsg(
+                  messageBody.getString("app_data"),
+                  messageBody.getString("net_data"),
+                  remainingDutyC,
+                  Float.parseFloat(primary.getString("freq")),
+                  primary.getInt("sf"),
+                  messageBody.getInt("power"),
+                  primary.getInt("time"),
+                  primary.getString("cr"),
+                  primary.getInt("band"),
+                  primary.getString("hWIdentifier"),
+                  messageBody.getString("dev_id")
+          );
         } else {
-          // Version 1.0 does not support network data buffering
-          System.out.println("Unable to deliver message due to insufficient duty cycle. Oversize of: " + remainingDutyC * (-1));
+          // Marks messages as sent in DB
+          this.programResources.dbHandler.markDownlinkAsSent(rawResponse.getInt("id"), remainingDutyC);
         }
+      } else {
+        // Version 1.0 does not support network data buffering
+        System.out.println("Unable to deliver message due to insufficient duty cycle. Oversize of: " + remainingDutyC * (-1));
       }
     } catch (JSONException | IOException e) {
       e.printStackTrace();
     }
-  }
-
-  /**
-   * Calculates metric for selected downlink messages
-   * @param rssi value of rssi
-   * @param dutyCycleRemaining remaining duty cycle value
-   * @return float
-   */
-  public float getMetric(int rssi, int dutyCycleRemaining) {
-    float dutyCyclePercent = Math.round((dutyCycleRemaining * 100.0) / maxDutyMillis);
-
-    // If more dutyC remaining than sensitivity boundary does not poison RSSI
-    if (dutyCyclePercent > this.dutyCycleSensitivity) {
-      return rssi;
-    }
-
-    // If less than critical dutyC remaining on a gateway poisons the RSSI by greater value
-    if (dutyCyclePercent < this.dutyCycleRestriction) {
-      // If really low duty cycle severely poisons the route
-      if (dutyCyclePercent < 5) {
-        System.out.println("***** Total poison");
-        return rssi - 1000;
-      }
-      // Else greater poison
-      System.out.println("**** High poison");
-      return rssi - this.restrictionPoison;
-    }
-    // If dutyC is between sensitivity and critical boundary poisons the RSSI by medium value
-    System.out.println("**** Medium poison");
-    return rssi - this.sensitivityPoison;
   }
 
   /**
@@ -224,28 +189,6 @@ public class EDProcessor {
    */
   public int getRemainingDutyCycle(JSONObject msgBody, int sf, int band, int dutyCycleBeforeSent) throws Exception {
     return dutyCycleBeforeSent - MessageHelper.getMsgCost(msgBody, sf, band);
-  }
-
-  /***
-   * Determines primary message from list of messages and returns it
-   * @param messages list containing copies of one messages from different APs
-   * @return JSONObject primary message
-   * @throws JSONException
-   */
-  private JSONObject getPrimaryMessage (ArrayList<JSONObject> messages) throws JSONException {
-    JSONObject primary = null;
-
-    for (JSONObject message : messages) {
-      if (primary == null) {
-        primary = message;
-      } else {
-        // Determine the best downlink candidate
-        if (getMetric(primary.getInt("rssi"), primary.getInt("duty_c")) < getMetric(message.getInt("rssi"), message.getInt("duty_c"))) {
-          primary = message;
-        }
-      }
-    }
-    return primary;
   }
 
   /***
@@ -321,36 +264,6 @@ public class EDProcessor {
     return powerChanged;
   }
 
-  private JSONObject tsAlgorithm (JSONObject primary, int finalRssi, int finalSnr) throws JSONException {
-    String ackType = primary.getString("ack");
-
-    if (ackType.equals("UNSUPPORTED")) {
-      return null;
-    }
-
-    int sf = primary.getInt("sf");
-    String devId = primary.getString("dev_id");
-
-    JSONObject message = new JSONObject();
-    JSONObject messageBody = new JSONObject();
-    JSONArray statModel = new JSONArray();
-
-    message.put("message_name", "TXL");
-    messageBody.put("net_data", statModel);
-    messageBody.put("dev_id", devId);
-    message.put("message_body", messageBody);
-
-    try {
-      messageBody.put("time", MessageHelper.getMsgCost(messageBody, sf, primary.getInt("band")));
-    } catch (Exception e) {
-      System.out.println("Unable to calculate airtime for downlink message");
-      e.printStackTrace();
-      return null;
-    }
-
-    return messageBody;
-  }
-
   private JSONObject ucbAlgorithm (JSONObject primary, int finalRssi, int finalSnr) throws JSONException {
     String ackType = primary.getString("ack");
 
@@ -359,15 +272,19 @@ public class EDProcessor {
     }
 
     int sf = primary.getInt("sf");
+    int power = primary.getInt("int");
     String devId = primary.getString("dev_id");
 
     JSONObject message = new JSONObject();
     JSONObject messageBody = new JSONObject();
-    JSONArray statModel = new JSONArray();
+    JSONArray net_data = this.programResources.dbHandler.readBandits(devId);
+
+    MessageHelper.updateBanditArms(net_data, sf, power, 0);
 
     message.put("message_name", "TXL");
-    messageBody.put("net_data", statModel);
+    messageBody.put("net_data", net_data);
     messageBody.put("dev_id", devId);
+    messageBody.put("power", power);
     message.put("message_body", messageBody);
 
     try {

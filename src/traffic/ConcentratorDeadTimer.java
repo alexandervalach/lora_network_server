@@ -3,14 +3,14 @@ package traffic;
 /**
  * Waits for LoRa messages to synchronize
  * @author Karol Cagáň
- * @version 1.0
+ * @version 0.3
  */
 public class ConcentratorDeadTimer extends Thread {
-  private String key;
-  private LoRaConcentrator parent;
-  private boolean isRegistration;
-  private boolean isEmergency;
-  private int sleepTime;
+  private final String key;
+  private final LoRaConcentrator parent;
+  private final boolean isRegistration;
+  private final boolean isEmergency;
+  private final int sleepTime;
 
   /**
    * Constructor
@@ -32,6 +32,7 @@ public class ConcentratorDeadTimer extends Thread {
       // Time to wait for all messages to come, e.g. synchronization timer
       // No need to wait in case of emergency
       if (!this.isEmergency) {
+        System.out.println("Waiting " + this.sleepTime + " ms for other messages");
         sleep(this.sleepTime);
       } else {
         System.out.println("Emergency message received, skipping message synchronization");

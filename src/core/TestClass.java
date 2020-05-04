@@ -5,7 +5,7 @@ import org.json.JSONObject;
 /**
  * Calls predetermined test case scenario
  * @author Karol Cagáň
- * @version 1.0
+ * @version 0.3
  */
 public class TestClass {
   /**

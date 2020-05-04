@@ -2,11 +2,11 @@ package database;
 
 import core.DateManager;
 import core.ProgramResources;
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.postgresql.util.PSQLException;
 
-import java.net.ConnectException;
 import java.sql.*;
 import java.text.DateFormat;
 import java.text.ParseException;
@@ -17,28 +17,27 @@ import java.util.ArrayList;
  * Handles database connection, read and write operations
  * @author Karol Cagáň
  * @author Alexander Valach
- * @version 1.0
+ * @version 0.3
  */
 public class DBHandler {
-  private String JDBC_DRIVER;
-  private String DB_URL;
+  private final String JDBC_DRIVER;
+  private final String DB_URL;
 
   // DB credentials
-  private String USER;
-  private String PASS;
+  private final String USER;
+  private final String PASS;
 
   private Connection conn = null;
   private PreparedStatement preparedStmt = null;
   private ResultSet rs = null;
-  private int maxPower;
-  private int maxSPF;
-  private int rssiHarmonizationLimit;
-  private Statement stmt;
-  private DateFormat dateFormat;
+  private final int maxPower;
+  private final int maxSPF;
+  private final int rssiHarmonizationLimit;
+  private final DateFormat dateFormat;
 
   /**
    * Class initialization
-   * @param programResources
+   * @param programResources instance of program resources
    */
   public DBHandler(ProgramResources programResources) {
     this.JDBC_DRIVER = programResources.props.getStr("DBHandler.JDBC_DRIVER");
@@ -62,7 +61,7 @@ public class DBHandler {
       Class.forName(this.JDBC_DRIVER);
       System.out.println("Connecting to database...");
       this.conn = DriverManager.getConnection(DB_URL, USER, PASS);
-      this.stmt = conn.createStatement();
+      Statement stmt = conn.createStatement();
     } catch (PSQLException e) {
       System.out.println("Connection refused by database server! Is it functional and running?");
       System.out.println("LoRa Network Server will now exit");
@@ -136,6 +135,11 @@ public class DBHandler {
     }
   }
 
+  /***
+   * Updates sequence number of single node
+   * @param id end node id
+   * @param lastSeq new sequence number value
+   */
   public void updateSequence(String id, int lastSeq) {
     try {
       preparedStmt = conn.prepareStatement("UPDATE nodes SET last_seq = ? WHERE id = ?");
@@ -148,9 +152,26 @@ public class DBHandler {
     }
   }
 
-  /**
+  /***
    * Writes new uplink message into DB
-   * */
+   * @param appData
+   * @param snr
+   * @param rssi
+   * @param dutyCRemaining
+   * @param isPrimary
+   * @param receiveTime
+   * @param msgGroupNumber
+   * @param seqNum
+   * @param frequency
+   * @param spf
+   * @param power
+   * @param airtime
+   * @param coderate
+   * @param bandwidth
+   * @param messageTypeId
+   * @param apId
+   * @param nodeId
+   */
   public void writeUplinkMsg(String appData, float snr, float rssi, int dutyCRemaining, boolean isPrimary,
                              Timestamp receiveTime, int msgGroupNumber, int seqNum, float frequency, int spf,
                              int power, int airtime, String coderate, int bandwidth, int messageTypeId,
@@ -185,8 +206,15 @@ public class DBHandler {
     }
   }
 
+  /***
+   * Saves all messages into DB
+   * @param currentGrape batch with all message replicas
+   * @param primary single message marked as primary
+   * @param msgGroupId message group id
+   * @param msgTypeId message type id
+   * @throws JSONException
+   */
   public void bulkInsertUplinkMessages (ArrayList<JSONObject> currentGrape, JSONObject primary, int msgGroupId, int msgTypeId) throws JSONException {
-    // Saves all messages into DB
     // TODO: Make bulk insert as a transcation
     for (JSONObject message : currentGrape) {
       this.writeUplinkMsg(
@@ -211,7 +239,16 @@ public class DBHandler {
     }
   }
 
-  // Writes new node into DB
+  /**
+   * Writes new node into DB
+   * @param id hardware identifier
+   * @param upPower uplink power
+   * @param downPower downlink power
+   * @param spf spreading factor value
+   * @param formattedDate receive time
+   * @param appId application id
+   * @param transmissionParam transmission params id
+   */
   public void writeNode(String id, int upPower, int downPower, int spf, String formattedDate,
                         int appId, int transmissionParam) {
     if (this.endNodeExists(id)) {
@@ -304,10 +341,10 @@ public class DBHandler {
 
   /**
    * Updates node power settings in DB
-   * @param nodeId
-   * @param upPowerDecrement
-   * @param downPowerDecrement
-   * @param spfDecrement
+   * @param nodeId hardware identifier
+   * @param upPowerDecrement uplink power increment
+   * @param downPowerDecrement downlink power increment
+   * @param spfDecrement sf decrement value
    * @return boolean
    */
   public boolean updatePower(String nodeId, int upPowerDecrement, int downPowerDecrement, int spfDecrement) {
@@ -346,9 +383,9 @@ public class DBHandler {
 
   /**
    * UPDATE: Updates node power settings in DB
-   * @param nodeId
-   * @param upPowerIncrement
-   * @param spfIncrement
+   * @param nodeId end node indentifier
+   * @param upPowerIncrement  uplink power value increment
+   * @param spfIncrement sf value increment
    * @return boolean
    */
   public boolean increasePower(String nodeId, int upPowerIncrement, int spfIncrement) {
@@ -376,8 +413,8 @@ public class DBHandler {
 
   /**
    * Updates downlink buffer message, marked as send
-   * @param msgId
-   * @param dutyCRemaining
+   * @param msgId downlink_message id from database
+   * @param dutyCRemaining remaining duty cycle value
    */
   public void markDownlinkAsSent(int msgId, int dutyCRemaining) {
     try {
@@ -395,7 +432,7 @@ public class DBHandler {
 
   /**
    * QUERY: Returns transmission parameters for AP of selected ID
-   * @param transmissionParamId
+   * @param transmissionParamId transmission param id
    * @return String
    */
   public String readTransmissionParams(int transmissionParamId) {
@@ -413,7 +450,7 @@ public class DBHandler {
 
   /**
    * QUERY: Returns node of selected ID
-   * @param id
+   * @param id hardware identifier of node
    * @return String
    */
   public String readNode(String id) {
@@ -430,7 +467,7 @@ public class DBHandler {
 
   /**
    * QUERY: Finds if DB has any awaiting downlink messages
-   * @param nodeId
+   * @param nodeId hardware identifier of node
    * @return String
    */
   public String readDownlinkMsg(String nodeId) {
@@ -446,7 +483,7 @@ public class DBHandler {
   }
 
   /**
-   * QUERY: Finds if DB has any avaiting downlink messages
+   * QUERY: Finds if DB has any awaiting downlink messages
    * @param nodeId
    * @return String
    */
@@ -529,5 +566,18 @@ public class DBHandler {
       e.printStackTrace();
     }
     return 1;
+  }
+
+  public JSONArray readBandits (String dev_id) throws JSONException {
+    try {
+      preparedStmt = conn.prepareStatement("SELECT stat_model FROM nodes WHERE dev_id = ?");
+      preparedStmt.setString(1, dev_id);
+      ResultSet result = preparedStmt.executeQuery();
+      String res = !result.next() ?  "[]" : result.getString("stat_model");
+      return new JSONArray(res);
+    } catch (SQLException e) {
+      e.printStackTrace();
+    }
+    return new JSONArray("[]");
   }
 }

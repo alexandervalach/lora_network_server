@@ -9,14 +9,14 @@ import org.json.JSONObject;
 /**
  * Handles all incoming messages
  * @author Karol Cagáň
- * @version 1.0
+ * @version 0.3
  */
 public class MessageController implements SocketListener {
-  private ProgramResources programResources;
+  private final ProgramResources programResources;
 
   /**
    * Constructor
-   * @param programResources
+   * @param programResources instance of possible program resources
    */
   public MessageController(ProgramResources programResources) {
     System.out.println("Message Controller created successfully!");
@@ -25,10 +25,10 @@ public class MessageController implements SocketListener {
 
   /**
    * Processes a received message
-   * @param st
-   * @param message
-   * @param online
-   * @param apIdentifier
+   * @param st local socket thread
+   * @param message received message
+   * @param online is ap online
+   * @param apIdentifier local ap identifier
    */
   public void process(SocketThread st, String message, boolean online, int apIdentifier) {
     System.out.println(DateManager.formatDate("dd.MM.yyyy>HH:mm:ss") + ": Received a new message from " + apIdentifier);
@@ -44,7 +44,7 @@ public class MessageController implements SocketListener {
         case "RXL":
         case "REGR":
           type = messageBody.getString("type");
-          programResources.loRaConcentrator.catchMsg(messageBody, apIdentifier, st.gethWIdentifier(), type);
+          programResources.loRaConcentrator.catchMsg(messageBody, apIdentifier, st.getHwIdentifier(), type);
           break;
         case "KEYR":
           JSONObject responseKEYR = programResources.apProcessor.processKEYR(messageBody);
@@ -66,7 +66,7 @@ public class MessageController implements SocketListener {
 
   /**
    * Closes connection with AP
-   * @param apIdentifier
+   * @param apIdentifier local access point identifier
    */
   public void socketDown(int apIdentifier) {
     System.out.println("Connection with " + apIdentifier + " has been lost!");

@@ -4,6 +4,11 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.ArrayList;
+
+/***
+ * Message helper useful functions
+ */
 public class MessageHelper {
   public static int getMsgCost(JSONObject msgBody, int spf, int bandwidth) {
     // Values initialization
@@ -60,6 +65,34 @@ public class MessageHelper {
     // System.out.println("On-Air time for packet calculated is " + msgCost + " milis");
 
     return Math.round(msgCost);
+  }
+
+  /***
+   * Updates bandit arms rewards
+   * @param bandits JSON array with bandit arms
+   * @param sf spreading factor of arm
+   * @param power power of amr
+   * @param reward reward increment/decrement value for selected arm
+   * @return new JSON bandits
+   * @throws JSONException
+   */
+  public static JSONArray updateBanditArms (JSONArray bandits, int sf, int power, int reward) throws JSONException {
+    JSONArray newBandits = new JSONArray();
+
+    for (int i = 0; i < bandits.length() ; i++) {
+      JSONObject bandit = bandits.getJSONObject(i);
+      JSONObject newBandit = new JSONObject("");
+      newBandit.put("sf", sf);
+      newBandit.put("pw", power);
+
+      if (bandit.getInt("sf") == sf && bandit.getInt("pw") == power) {
+        newBandit.put("rw", reward);
+      }
+
+      newBandits.put(newBandit);
+    }
+
+    return newBandits;
   }
 
 }

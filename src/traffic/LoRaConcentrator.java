@@ -9,27 +9,30 @@ import java.util.HashMap;
 /**
  * Concentrates messages from different concentrators
  * @author Karol Cagáň
- * @version 1.0
+ * @version 0.3
  */
 public class LoRaConcentrator {
   public ProgramResources programResources;
-  private HashMap<String, ArrayList<JSONObject>> matchingTable;
+  private final HashMap<String, ArrayList<JSONObject>> matchingTable;
+  private final boolean banditAlgorithm;
 
   /**
    * Constructor
-   * @param programResources
+   * @param programResources instance of base program resources
    */
   public LoRaConcentrator(ProgramResources programResources) {
     this.programResources = programResources;
-    matchingTable = new HashMap<String, ArrayList<JSONObject>>();
+    String algorithm = programResources.props.getStr("ServerSetting.algorithm");
+    this.banditAlgorithm = algorithm.equals("ucb") || algorithm.equals("ts");
+    matchingTable = new HashMap<>();
   }
 
   /**
    * Inserts messages into hashtable for matching communication
-   * @param jsonObject
-   * @param apIdentifier
-   * @param hWID
-   * @param type
+   * @param jsonObject received JSON object
+   * @param apIdentifier sender local identifier
+   * @param hWID sender global identifier
+   * @param type message type
    * @throws Exception
    */
   public void catchMsg(JSONObject jsonObject, int apIdentifier, String hWID, String type) throws Exception {
@@ -39,7 +42,7 @@ public class LoRaConcentrator {
     ArrayList<JSONObject> myGrape;
 
     boolean isRegistration = type.equals("reg");
-    // Builds string hashkey
+    // Builds string hash key
     String key;
 
     if (isRegistration) {
@@ -73,7 +76,7 @@ public class LoRaConcentrator {
 
   /**
    * After the messages have been synchronized clears the hashmap and handles messages
-   * @param key
+   * @param key matching table key
    */
   public void finalize(String key) {
     ArrayList<JSONObject> currentGrape;
@@ -84,6 +87,9 @@ public class LoRaConcentrator {
 
     // Calls server logic to process the messages
     synchronized (programResources.edProcessor) {
+      if (this.banditAlgorithm) {
+        programResources.apProcessor.updateBandits(currentGrape);
+      }
       programResources.edProcessor.processRXL(currentGrape);
     }
   }
@@ -101,6 +107,9 @@ public class LoRaConcentrator {
 
     // Calls server logic to process the messages
     synchronized (programResources.edProcessor) {
+      if (this.banditAlgorithm) {
+        programResources.apProcessor.updateBandits(currentGrape);
+      }
       programResources.apProcessor.processREGR(currentGrape);
     }
   }
