@@ -116,14 +116,13 @@ public class EDProcessor extends NodeProcessor {
       //---COMMUNICATION PARAMS ALGORITHM SELECTION
       JSONObject messageBody;
 
-      if (!this.isBanditAlgorithm) {
-        messageBody = this.adrAlgorithm(primary, finalRssi, finalSnr);
-      } else {
+      if (this.isBanditAlgorithm) {
         messageBody = this.ucbAlgorithm(primary, finalRssi, finalSnr);
+      } else {
+        messageBody = this.adrAlgorithm(primary, finalRssi, finalSnr);
       }
 
       if (messageBody == null) {
-        System.out.print("There was an error processing downlink message body");
         return;
       }
 
@@ -265,6 +264,7 @@ public class EDProcessor extends NodeProcessor {
   }
 
   private JSONObject ucbAlgorithm (JSONObject primary, int finalRssi, int finalSnr) throws JSONException {
+    System.out.println("UCB ALGORITHM");
     String ackType = primary.getString("ack");
 
     if (ackType.equals("UNSUPPORTED")) {
@@ -272,18 +272,17 @@ public class EDProcessor extends NodeProcessor {
     }
 
     int sf = primary.getInt("sf");
-    int power = primary.getInt("int");
+    int power = primary.getInt("power");
     String devId = primary.getString("dev_id");
 
     JSONObject message = new JSONObject();
     JSONObject messageBody = new JSONObject();
-    JSONArray net_data = this.programResources.dbHandler.readBandits(devId);
-
-    MessageHelper.updateBanditArms(net_data, sf, power, 0);
+    JSONArray netData = this.getStatModel(devId);
 
     message.put("message_name", "TXL");
-    messageBody.put("net_data", net_data);
     messageBody.put("dev_id", devId);
+    messageBody.put("app_data", "");
+    messageBody.put("net_data", netData);
     messageBody.put("power", power);
     message.put("message_body", messageBody);
 
@@ -299,12 +298,11 @@ public class EDProcessor extends NodeProcessor {
   }
 
   private JSONObject adrAlgorithm (JSONObject primary, int finalRssi, int finalSnr) throws JSONException {
-    // Loads previous messages
+    System.out.println("ADR ALGORITHM");
     String devId = primary.getString("dev_id");
-
-    // Quits if response unavailable
     String ackType = primary.getString("ack");
 
+    // Quits if response unavailable
     if (ackType.equals("UNSUPPORTED")) {
       return null;
     }
@@ -333,7 +331,7 @@ public class EDProcessor extends NodeProcessor {
         downPw = maxPower;
         upPw = maxPower;
         spf = maxSpf;
-        //set full power for device in DB as well
+        // Set full power for device in DB as well
         this.programResources.dbHandler.updatePower(devId, 0, 0, 0);
       }
 
@@ -350,45 +348,14 @@ public class EDProcessor extends NodeProcessor {
         messageBody.put("app_data", "");
       }
 
-      // Packs network data if needed
+      // Packs network data if required
       if (confNeed) {
-        System.out.println("Using ADR algorithm");
-        JSONObject params = new JSONObject(programResources.dbHandler.readTransmissionParams(edTransmissionParamId));
-
-        // Builds transmission param array
-        JSONObject normalParam = new JSONObject();
-        normalParam.put("sf", spf);
-        normalParam.put("cr", params.get("coderate"));
-        normalParam.put("band", params.get("bandwidth"));
-        normalParam.put("type", "NORMAL");
-        normalParam.put("power", upPw);
-        normalParam.put("freqs", params.get("standard_freq_arr"));
-
-        JSONObject emerParam = new JSONObject(normalParam.toString());
-        emerParam.put("type", "EMER");
-        emerParam.put("sf", maxSpf);
-        emerParam.put("power", maxPower); // Fixed max power for emergency Bcast
-        emerParam.put("freqs", params.get("emergency_freq_arr"));
-
-        JSONObject regParam = new JSONObject(normalParam.toString());
-        regParam.put("type", "REG");
-        regParam.put("sf", maxSpf);
-        regParam.put("power", maxPower); // Fixed max power for reg Bcast
-        regParam.put("freqs", params.get("registration_freq_arr"));
-
-        // Creates an array of params as a response
-        netData.put(emerParam);
-        netData.put(normalParam);
-        netData.put(regParam);
+        netData = this.getNetData(spf, upPw, edTransmissionParamId);
       }
 
       // If nodes transmitting power needs to be decreased, packs the config
       if (powerChanged) {
-        JSONObject normalParam = new JSONObject();
-        normalParam.put("type", "NORMAL");
-        normalParam.put("power", upPw);
-        normalParam.put("sf", spf);
-        netData.put(normalParam);
+        netData.put(this.getNormalParams(spf, upPw));
       }
 
       // Packs net data
@@ -406,5 +373,9 @@ public class EDProcessor extends NodeProcessor {
       return messageBody;
     }
     return null;
+  }
+
+  public JSONArray getStatModel(String devId) throws JSONException {
+    return new JSONArray(programResources.dbHandler.readEnStatModel(devId));
   }
 }

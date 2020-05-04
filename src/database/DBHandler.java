@@ -568,16 +568,49 @@ public class DBHandler {
     return 1;
   }
 
-  public JSONArray readBandits (String dev_id) throws JSONException {
+  /**
+   * Read statistical modal from DB
+   * @param devId hardware node identifier
+   * @return json array
+   */
+  public String readEnStatModel (String devId) {
     try {
-      preparedStmt = conn.prepareStatement("SELECT stat_model FROM nodes WHERE dev_id = ?");
-      preparedStmt.setString(1, dev_id);
+      preparedStmt = conn.prepareStatement("SELECT stat_model FROM nodes WHERE id = ?");
+      preparedStmt.setString(1, devId);
       ResultSet result = preparedStmt.executeQuery();
-      String res = !result.next() ?  "[]" : result.getString("stat_model");
-      return new JSONArray(res);
+      return !result.next() ?  "[]" : result.getString("stat_model");
     } catch (SQLException e) {
       e.printStackTrace();
     }
-    return new JSONArray("[]");
+    return "[]";
+  }
+
+  /**
+   * Read statistical modal from DB
+   * @param apId access point identifier
+   * @return json array
+   */
+  public String readApStatModel (String apId) {
+    try {
+      preparedStmt = conn.prepareStatement("SELECT stat_model FROM aps WHERE id = ?");
+      preparedStmt.setString(1, apId);
+      ResultSet result = preparedStmt.executeQuery();
+      return !result.next() ?  "[]" : result.getString("stat_model");
+    } catch (SQLException e) {
+      e.printStackTrace();
+    }
+    return "[]";
+  }
+
+  public void writeStatModel(String devId, JSONArray statModel) {
+    try {
+      preparedStmt = conn.prepareStatement("UPDATE nodes SET stat_model = to_json(?) WHERE id = ?");
+      preparedStmt.setString(1, statModel.toString());
+      preparedStmt.setString(2, devId);
+      preparedStmt.executeUpdate();
+      System.out.println("Added new statistical model for nodes " + devId);
+    } catch (SQLException e) {
+      e.printStackTrace();
+    }
   }
 }

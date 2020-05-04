@@ -2,6 +2,7 @@ package processor;
 
 import core.ProgramResources;
 import core.Props;
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -54,7 +55,6 @@ public abstract class NodeProcessor {
     String algorithm = props.getStr("ServerSetting.algorithm");
     this.isBanditAlgorithm = algorithm.equals("ucb") || algorithm.equals("ts");
   }
-
 
   /**
    * Calculates metric for selected downlink messages
@@ -109,12 +109,40 @@ public abstract class NodeProcessor {
     return primary;
   }
 
-  protected JSONObject apBanditConfiguration (int apId) {
-    return new JSONObject();
+  public JSONArray getNetData(int spf, int upPw, int transmissionParamsId) throws JSONException {
+    JSONObject params = new JSONObject(programResources.dbHandler.readTransmissionParams(transmissionParamsId));
+
+    // Builds transmission param array
+    JSONObject normalParam = this.getNormalParams(spf, upPw);
+    normalParam.put("cr", params.get("coderate"));
+    normalParam.put("band", params.get("bandwidth"));
+    normalParam.put("freqs", params.get("standard_freq"));
+
+    JSONObject emerParam = new JSONObject(normalParam.toString());
+    emerParam.put("type", "EMER");
+    emerParam.put("sf", maxSpf);
+    emerParam.put("power", maxPower);
+    emerParam.put("freqs", params.get("emergency_freq"));
+
+    JSONObject regParam = new JSONObject(normalParam.toString());
+    regParam.put("type", "REG");
+    regParam.put("sf", maxSpf);
+    regParam.put("power", maxPower);
+    regParam.put("freqs", params.get("registration_freq"));
+
+    // Creates an array of params as a response
+    JSONArray netData = new JSONArray();
+    netData.put(emerParam);
+    netData.put(normalParam);
+    netData.put(regParam);
+    return netData;
   }
 
-  protected JSONObject enBanditConfiguration (String devId) {
-    return new JSONObject();
+  public JSONObject getNormalParams(int spf, int upPw) throws JSONException {
+    JSONObject normalParam = new JSONObject();
+    normalParam.put("type", "NORMAL");
+    normalParam.put("power", upPw);
+    normalParam.put("sf", spf);
+    return normalParam;
   }
-
 }

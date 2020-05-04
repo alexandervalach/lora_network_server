@@ -4,8 +4,6 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.util.ArrayList;
-
 /***
  * Message helper useful functions
  */
@@ -60,7 +58,6 @@ public class MessageHelper {
     // System.out.println("***** Symbol time is: " + symbolTime);
     int msgSymbols  = (int) 8 + ((8 * (netDataBytes + appDataBytes + loraFiitOverheadBytes + payloadOverhead + blockSizeOverhead) - 4 * spf + 28 + 16 ) / (4 * (spf-2))) * (cr + 4);
     // System.out.println("***** Msg symbol count is :" + msgSymbols);
-
     float msgCost = msgSymbols * symbolTime;
     // System.out.println("On-Air time for packet calculated is " + msgCost + " milis");
 
@@ -68,7 +65,7 @@ public class MessageHelper {
   }
 
   /***
-   * Updates bandit arms rewards
+   * Updates bandit arms rewards and returns json array
    * @param bandits JSON array with bandit arms
    * @param sf spreading factor of arm
    * @param power power of amr
@@ -76,23 +73,14 @@ public class MessageHelper {
    * @return new JSON bandits
    * @throws JSONException
    */
-  public static JSONArray updateBanditArms (JSONArray bandits, int sf, int power, int reward) throws JSONException {
-    JSONArray newBandits = new JSONArray();
-
+  public static JSONArray updateStatModel (JSONArray bandits, int sf, int power, int reward) throws JSONException {
     for (int i = 0; i < bandits.length() ; i++) {
       JSONObject bandit = bandits.getJSONObject(i);
-      JSONObject newBandit = new JSONObject("");
-      newBandit.put("sf", sf);
-      newBandit.put("pw", power);
-
       if (bandit.getInt("sf") == sf && bandit.getInt("pw") == power) {
-        newBandit.put("rw", reward);
+        bandit.put("rw", reward);
       }
-
-      newBandits.put(newBandit);
     }
-
-    return newBandits;
+    return bandits;
   }
 
 }
