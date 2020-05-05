@@ -145,4 +145,70 @@ public abstract class NodeProcessor {
     normalParam.put("sf", spf);
     return normalParam;
   }
+
+  public JSONObject statModelChange (String devId, int rssi, int snr, int sf, int power, boolean confNeed) throws JSONException {
+    boolean configChanged = false;
+
+    if (rssi > this.downPwSensitivity && !confNeed && snr > this.snrSensitivity) {
+      if (rssi > this.downSfSensitivity && sf > 7) {
+        // Decrement SF
+        sf--;
+        configChanged = true;
+      } else if (power < 15) {
+        // Increment power
+        power++;
+        configChanged = true;
+      }
+
+      if (!configChanged && power > 5) {
+        // Decrement power
+        power--;
+        configChanged = true;
+      }
+    } else if (rssi < this.upPwSensitivity && !confNeed || snr < this.snrSensitivity && !confNeed) {
+      if (rssi < this.upSfSensitivity && sf < 12) {
+        sf++;
+        configChanged = true;
+      } else if (power < 15) {
+        power++;
+        configChanged = true;
+      }
+
+      if (!configChanged && power < 15) {
+        power++;
+        configChanged = true;
+      }
+    }
+
+    if (configChanged) {
+      JSONObject bandit = new JSONObject();
+      bandit.put("sf", sf);
+      bandit.put("pw", power);
+      bandit.put("rw", 1);
+      return bandit;
+    }
+    return null;
+  }
+
+  public JSONArray getApStatModel(String apId) {
+    try {
+      String model = programResources.dbHandler.readApStatModel(apId);
+      System.out.println("AP model:" + model);
+      return new JSONArray(model);
+    } catch (JSONException e) {
+      e.printStackTrace();
+      return null;
+    }
+  }
+
+  public JSONArray getEnStatModel(String devId) {
+    try {
+      String model = programResources.dbHandler.readEnStatModel(devId);
+      System.out.println("EN model:" + model);
+      return new JSONArray(model);
+    } catch (JSONException e) {
+      e.printStackTrace();
+      return null;
+    }
+  }
 }

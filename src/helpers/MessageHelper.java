@@ -73,14 +73,15 @@ public class MessageHelper {
    * @return new JSON bandits
    * @throws JSONException
    */
-  public static JSONArray updateStatModel (JSONArray bandits, int sf, int power, int reward) throws JSONException {
+  public static void updateStatModel (JSONArray bandits, int sf, int power, int reward) throws JSONException {
     for (int i = 0; i < bandits.length() ; i++) {
       JSONObject bandit = bandits.getJSONObject(i);
       if (bandit.getInt("sf") == sf && bandit.getInt("pw") == power) {
-        bandit.put("rw", reward);
+        int updatedReward = bandit.getInt("rw") + reward;
+        bandit.put("rw", updatedReward);
+        System.out.println("Updated bandit arm SF=" + sf + " PWR=" + power + " to RW=" + reward);
       }
     }
-    return bandits;
   }
 
 }

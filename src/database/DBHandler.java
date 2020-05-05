@@ -578,7 +578,7 @@ public class DBHandler {
       preparedStmt = conn.prepareStatement("SELECT stat_model FROM nodes WHERE id = ?");
       preparedStmt.setString(1, devId);
       ResultSet result = preparedStmt.executeQuery();
-      return !result.next() ?  "[]" : result.getString("stat_model");
+      return !result.next() ? "[]" : result.getString("stat_model");
     } catch (SQLException e) {
       e.printStackTrace();
     }
@@ -602,13 +602,25 @@ public class DBHandler {
     return "[]";
   }
 
-  public void writeStatModel(String devId, JSONArray statModel) {
+  public void updateEnStatModel(String devId, String statModel) {
     try {
-      preparedStmt = conn.prepareStatement("UPDATE nodes SET stat_model = to_json(?) WHERE id = ?");
-      preparedStmt.setString(1, statModel.toString());
+      preparedStmt = conn.prepareStatement("UPDATE nodes SET stat_model = ?::json WHERE id = ?");
+      preparedStmt.setString(1, statModel);
       preparedStmt.setString(2, devId);
       preparedStmt.executeUpdate();
-      System.out.println("Added new statistical model for nodes " + devId);
+      System.out.println("Updated statistical model for node " + devId);
+    } catch (SQLException e) {
+      e.printStackTrace();
+    }
+  }
+
+  public void updateApStatModel(String hwId, String statModel) {
+    try {
+      preparedStmt = conn.prepareStatement("UPDATE aps SET stat_model = ?::json WHERE id = ?");
+      preparedStmt.setString(1, statModel);
+      preparedStmt.setString(2, hwId);
+      preparedStmt.executeUpdate();
+      System.out.println("Updated statistical model for ap " + hwId);
     } catch (SQLException e) {
       e.printStackTrace();
     }
