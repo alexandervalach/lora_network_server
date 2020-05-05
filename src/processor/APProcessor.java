@@ -232,8 +232,13 @@ public class APProcessor extends NodeProcessor {
     }
   }
 
-  public JSONArray getStatModel(String apId) throws JSONException {
-    return new JSONArray(programResources.dbHandler.readApStatModel(apId));
+  public JSONArray getStatModel(String apId) {
+    try {
+      return new JSONArray(programResources.dbHandler.readApStatModel(apId));
+    } catch (JSONException e) {
+      e.printStackTrace();
+      return null;
+    }
   }
 
   public void updateBandits(ArrayList<JSONObject> currentGrape) {

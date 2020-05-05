@@ -279,6 +279,10 @@ public class EDProcessor extends NodeProcessor {
     JSONObject messageBody = new JSONObject();
     JSONArray netData = this.getStatModel(devId);
 
+    if (netData == null) {
+      return null;
+    }
+
     message.put("message_name", "TXL");
     messageBody.put("dev_id", devId);
     messageBody.put("app_data", "");
@@ -375,7 +379,12 @@ public class EDProcessor extends NodeProcessor {
     return null;
   }
 
-  public JSONArray getStatModel(String devId) throws JSONException {
-    return new JSONArray(programResources.dbHandler.readEnStatModel(devId));
+  public JSONArray getStatModel(String devId) {
+    try {
+      return new JSONArray(programResources.dbHandler.readEnStatModel(devId));
+    } catch (JSONException e) {
+      e.printStackTrace();
+      return null;
+    }
   }
 }
