@@ -14,6 +14,7 @@ import java.util.ArrayList;
 /**
  * AP processing logic
  * @author Karol Cagáň
+ * @author Alexander Valach
  * @version 0.3
  */
 public class APProcessor extends NodeProcessor {
@@ -207,6 +208,15 @@ public class APProcessor extends NodeProcessor {
     }
   }
 
+  /***
+   * Generates registration message body
+   * @param primary boolean
+   * @param psk pre shared key
+   * @param spf spreading factor
+   * @param upPw uplink power
+   * @param transmissionParamsId transmission params id
+   * @return REGA message body
+   */
   public JSONObject getRegaBody (JSONObject primary, String psk, int spf, int upPw, int transmissionParamsId) {
     try {
       // Creates response body
@@ -238,6 +248,10 @@ public class APProcessor extends NodeProcessor {
     }
   }
 
+  /***
+   * Updates bandit arms
+   * @param currentGrape array list of message replicas
+   */
   public void updateBandits(ArrayList<JSONObject> currentGrape) {
     try {
       JSONObject primary = this.getPrimaryMessage(currentGrape);

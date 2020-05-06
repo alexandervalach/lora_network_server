@@ -6,6 +6,8 @@ import org.json.JSONObject;
 
 /***
  * Message helper useful functions
+ * @author Alexander Valach
+ * @version 0.3
  */
 public class MessageHelper {
   public static int getMsgCost(JSONObject msgBody, int spf, int bandwidth) {
@@ -70,7 +72,6 @@ public class MessageHelper {
    * @param sf spreading factor of arm
    * @param power power of amr
    * @param reward reward increment/decrement value for selected arm
-   * @return new JSON bandits
    * @throws JSONException
    */
   public static void updateStatModel (JSONArray bandits, int sf, int power, int reward) throws JSONException {

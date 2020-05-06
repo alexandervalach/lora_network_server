@@ -75,14 +75,14 @@ public class DBHandler {
 
   /**
    * Writes a new AP into DB
-   * @param id
-   * @param protocolVersion
-   * @param maxPower
-   * @param channelsNum
-   * @param dutyCycleRefresh
-   * @param loraProtocol
-   * @param loraProtocolVer
-   * @param transmissionParamId
+   * @param id String
+   * @param protocolVersion String
+   * @param maxPower int
+   * @param channelsNum int
+   * @param dutyCycleRefresh Time
+   * @param loraProtocol String
+   * @param loraProtocolVer String
+   * @param transmissionParamId int
    */
   public void writeAp(String id, String protocolVersion, int maxPower, int channelsNum, Time dutyCycleRefresh, String loraProtocol, String loraProtocolVer, int transmissionParamId) {
     if (this.accessPointExists(id)) {
@@ -154,23 +154,23 @@ public class DBHandler {
 
   /***
    * Writes new uplink message into DB
-   * @param appData
-   * @param snr
-   * @param rssi
-   * @param dutyCRemaining
-   * @param isPrimary
-   * @param receiveTime
-   * @param msgGroupNumber
-   * @param seqNum
-   * @param frequency
-   * @param spf
-   * @param power
-   * @param airtime
-   * @param coderate
-   * @param bandwidth
-   * @param messageTypeId
-   * @param apId
-   * @param nodeId
+   * @param appData String base64 encoded data
+   * @param snr int value of SNR
+   * @param rssi int value of RSSI
+   * @param dutyCRemaining remaining duty cycle
+   * @param isPrimary is primary message
+   * @param receiveTime Timnestamp
+   * @param msgGroupNumber int
+   * @param seqNum int message sequence numnber
+   * @param frequency float frequency
+   * @param spf int spreading factir
+   * @param power int power
+   * @param airtime time on air
+   * @param coderate String coding rate
+   * @param bandwidth bandwidth
+   * @param messageTypeId message type
+   * @param apId acess point id
+   * @param nodeId end node id
    */
   public void writeUplinkMsg(String appData, float snr, float rssi, int dutyCRemaining, boolean isPrimary,
                              Timestamp receiveTime, int msgGroupNumber, int seqNum, float frequency, int spf,
@@ -602,6 +602,11 @@ public class DBHandler {
     return "[]";
   }
 
+  /***
+   * Updates arms of end node
+   * @param devId end node identifier
+   * @param statModel statistical model
+   */
   public void updateEnStatModel(String devId, String statModel) {
     try {
       preparedStmt = conn.prepareStatement("UPDATE nodes SET stat_model = ?::json WHERE id = ?");
@@ -614,6 +619,11 @@ public class DBHandler {
     }
   }
 
+  /***
+   * Update arms of access point
+   * @param hwId access point identifier
+   * @param statModel statistical model
+   */
   public void updateApStatModel(String hwId, String statModel) {
     try {
       preparedStmt = conn.prepareStatement("UPDATE aps SET stat_model = ?::json WHERE id = ?");

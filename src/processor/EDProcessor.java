@@ -263,6 +263,14 @@ public class EDProcessor extends NodeProcessor {
     return powerChanged;
   }
 
+  /***
+   * Statistical model update using UCB
+   * @param primary primary message
+   * @param finalRssi average RSSI value
+   * @param finalSnr average SNR value
+   * @return messageBody
+   * @throws JSONException
+   */
   private JSONObject ucbAlgorithm (JSONObject primary, int finalRssi, int finalSnr) throws JSONException {
     String ackType = primary.getString("ack");
 
@@ -307,6 +315,14 @@ public class EDProcessor extends NodeProcessor {
     return messageBody;
   }
 
+  /***
+   * Handling ADR messages
+   * @param primary primary message
+   * @param finalRssi average RSSI value
+   * @param finalSnr average SNR value
+   * @return messageBody
+   * @throws JSONException
+   */
   private JSONObject adrAlgorithm (JSONObject primary, int finalRssi, int finalSnr) throws JSONException {
     String devId = primary.getString("dev_id");
     String ackType = primary.getString("ack");

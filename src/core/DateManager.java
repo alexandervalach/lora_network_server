@@ -22,6 +22,10 @@ public class DateManager {
     return writeFormat.format(date);
   }
 
+  /***
+   * Return current timestamp
+   * @return Timestamp
+   */
   public static Timestamp getTimestamp() {
     Date date = new Date();
     return new Timestamp(date.getTime());

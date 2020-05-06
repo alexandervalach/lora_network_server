@@ -9,6 +9,7 @@ import java.util.HashMap;
 /**
  * Concentrates messages from different concentrators
  * @author Karol Cagáň
+ * @author Alexander Valach
  * @version 0.3
  */
 public class LoRaConcentrator {
@@ -96,7 +97,7 @@ public class LoRaConcentrator {
 
   /**
    * After the messages have been synchronized clears the hashmap and handles messages
-   * @param key
+   * @param key String
    */
   public void register(String key) {
     ArrayList<JSONObject> currentGrape;

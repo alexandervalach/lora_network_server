@@ -8,8 +8,9 @@ import org.json.JSONObject;
  * @version 0.3
  */
 public class TestClass {
-  /**
+  /***
    * Debug program version
+   * @param programResources ProgramResources
    */
   public static void testFunct(ProgramResources programResources) {
     try {
