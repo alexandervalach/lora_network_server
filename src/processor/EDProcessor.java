@@ -263,8 +263,15 @@ public class EDProcessor extends NodeProcessor {
     return powerChanged;
   }
 
+  /***
+   * Statistical model update using UCB
+   * @param primary primary message
+   * @param finalRssi average RSSI value
+   * @param finalSnr average SNR value
+   * @return messageBody
+   * @throws JSONException
+   */
   private JSONObject ucbAlgorithm (JSONObject primary, int finalRssi, int finalSnr) throws JSONException {
-    System.out.println("UCB ALGORITHM");
     String ackType = primary.getString("ack");
 
     if (ackType.equals("UNSUPPORTED")) {
@@ -274,10 +281,21 @@ public class EDProcessor extends NodeProcessor {
     int sf = primary.getInt("sf");
     int power = primary.getInt("power");
     String devId = primary.getString("dev_id");
+    boolean confNeed = primary.getBoolean("conf_need");
 
     JSONObject message = new JSONObject();
     JSONObject messageBody = new JSONObject();
-    JSONArray netData = this.getStatModel(devId);
+    JSONArray netData = this.getEnStatModel(devId);
+
+    if (netData == null) {
+      return null;
+    }
+
+    JSONObject banditArm = this.statModelChange(devId, finalRssi, finalSnr, sf, power, confNeed);
+
+    if (banditArm != null) {
+      MessageHelper.updateStatModel(netData, banditArm.getInt("sf"), banditArm.getInt("pw"), 1);
+    }
 
     if (netData == null) {
       return null;
@@ -301,8 +319,15 @@ public class EDProcessor extends NodeProcessor {
     return messageBody;
   }
 
+  /***
+   * Handling ADR messages
+   * @param primary primary message
+   * @param finalRssi average RSSI value
+   * @param finalSnr average SNR value
+   * @return messageBody
+   * @throws JSONException
+   */
   private JSONObject adrAlgorithm (JSONObject primary, int finalRssi, int finalSnr) throws JSONException {
-    System.out.println("ADR ALGORITHM");
     String devId = primary.getString("dev_id");
     String ackType = primary.getString("ack");
 
@@ -377,14 +402,5 @@ public class EDProcessor extends NodeProcessor {
       return messageBody;
     }
     return null;
-  }
-
-  public JSONArray getStatModel(String devId) {
-    try {
-      return new JSONArray(programResources.dbHandler.readEnStatModel(devId));
-    } catch (JSONException e) {
-      e.printStackTrace();
-      return null;
-    }
   }
 }

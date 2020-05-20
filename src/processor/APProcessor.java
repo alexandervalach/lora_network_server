@@ -14,6 +14,7 @@ import java.util.ArrayList;
 /**
  * AP processing logic
  * @author Karol Cagáň
+ * @author Alexander Valach
  * @version 0.3
  */
 public class APProcessor extends NodeProcessor {
@@ -207,6 +208,15 @@ public class APProcessor extends NodeProcessor {
     }
   }
 
+  /***
+   * Generates registration message body
+   * @param primary boolean
+   * @param psk pre shared key
+   * @param spf spreading factor
+   * @param upPw uplink power
+   * @param transmissionParamsId transmission params id
+   * @return REGA message body
+   */
   public JSONObject getRegaBody (JSONObject primary, String psk, int spf, int upPw, int transmissionParamsId) {
     try {
       // Creates response body
@@ -215,8 +225,14 @@ public class APProcessor extends NodeProcessor {
       String devId = primary.getString("dev_id");
 
       if (this.isBanditAlgorithm) {
-        netData = this.getStatModel(primary.getString("hWIdentifier"));
-        this.programResources.dbHandler.writeStatModel(devId, netData);
+        String apId = primary.getString("hWIdentifier");
+        netData = this.getApStatModel(apId);
+
+        if (netData == null) {
+          return null;
+        }
+
+        this.programResources.dbHandler.updateEnStatModel(devId, netData.toString());
       } else {
         netData = this.getNetData(spf, upPw, transmissionParamsId);
       }
@@ -224,7 +240,7 @@ public class APProcessor extends NodeProcessor {
       messageBody.put("dev_id", devId);
       messageBody.put("power", upPw);
       messageBody.put("sh_key", psk);
-      messageBody.put("app_data", ""); // Version 1.0 does not support app data on first downlink message
+      messageBody.put("app_data", "");
       messageBody.put("net_data", netData);
       return messageBody;
     } catch (JSONException e) {
@@ -232,78 +248,42 @@ public class APProcessor extends NodeProcessor {
     }
   }
 
-  public JSONArray getStatModel(String apId) {
-    try {
-      return new JSONArray(programResources.dbHandler.readApStatModel(apId));
-    } catch (JSONException e) {
-      e.printStackTrace();
-      return null;
-    }
-  }
-
+  /***
+   * Updates bandit arms
+   * @param currentGrape array list of message replicas
+   */
   public void updateBandits(ArrayList<JSONObject> currentGrape) {
-    /*
     try {
       JSONObject primary = this.getPrimaryMessage(currentGrape);
-      int apIdentifier = primary.getInt("apIdentifier");
+      String apId = primary.getString("hWIdentifier");
+      String devId = primary.getString("dev_id");
 
-      // If message is received with exceptional quality decreases up power already, otherwise set power to max
-      int upPw = maxPower;
-      int downPw = maxPower;
-      int spf = maxSpf;
+      int rssi = primary.getInt("rssi");
+      int sf = primary.getInt("sf");
+      int power = primary.getInt("power");
 
-      // Determine transmission power down
-      if (primary.getInt("rssi") > this.downPowerSensitivity) {
-        if (primary.getInt("rssi") > this.downSFSensitivity) {
-          spf--;
-        } else {
-          upPw--;
-          downPw--;
-        }
-      }
+      JSONArray apStatModel = this.getApStatModel(apId);
+      JSONArray enStatModel = this.getEnStatModel(devId);
 
-      // Version 1.0 only supports one application, change here
-      int appId = 1;
-
-      // Version 1.0 only supports one default transmission param for all ED, place transmission param logic here
-      int Transmission_PARAM_ID = edTransmissionParamId;
-
-      // Writes node into DB
-      programResources.dbHandler.writeNode(
-              primary.getString("dev_id"),
-              upPw,
-              downPw,
-              spf,
-              DateManager.formatDate("00:mm:ss"),
-              appId,
-              Transmission_PARAM_ID
-      );
-
-      // Preparing response
-      JSONObject REGAmsg = new JSONObject();
-      JSONObject messageBody;
-
-      if (this.isBanditAlgorithm) {
-        messageBody = this.apBanditConfiguration(apIdentifier);
-      } else {
-        messageBody = this.adrConfiguration(primary, preSharedKey, spf, upPw, Transmission_PARAM_ID);
-      }
-
-      if (messageBody == null) {
+      if (apStatModel == null || enStatModel == null) {
         return;
       }
 
-      // Builds the reply message
-      REGAmsg.put("message_name", "REGA");
-      REGAmsg.put("message_body", messageBody);
-      messageBody.put("time", MessageHelper.getMsgCost(messageBody, primary.getInt("sf"), primary.getInt("band")));
+      // Determine transmission power down
+      if (rssi > this.downPowerSensitivity) {
+        if (rssi > this.downSFSensitivity) {
+          sf--;
+        } else {
+          power--;
+        }
 
-      System.out.println("New REGA msg created for AP: " + REGAmsg);
-      // Sends answer do desired AP
-      this.programResources.sslConnection.socketThreadArrayList.get(apIdentifier).write(REGAmsg.toString());
+        MessageHelper.updateStatModel(apStatModel, sf, power, 1);
+        MessageHelper.updateStatModel(enStatModel, sf, power, 1);
+        this.programResources.dbHandler.updateEnStatModel(devId, enStatModel.toString());
+        this.programResources.dbHandler.updateApStatModel(apId, apStatModel.toString());
+      }
     } catch (JSONException e) {
-
+      e.printStackTrace();
     }
-    */
   }
 }

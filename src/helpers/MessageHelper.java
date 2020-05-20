@@ -6,6 +6,8 @@ import org.json.JSONObject;
 
 /***
  * Message helper useful functions
+ * @author Alexander Valach
+ * @version 0.3
  */
 public class MessageHelper {
   public static int getMsgCost(JSONObject msgBody, int spf, int bandwidth) {
@@ -70,17 +72,17 @@ public class MessageHelper {
    * @param sf spreading factor of arm
    * @param power power of amr
    * @param reward reward increment/decrement value for selected arm
-   * @return new JSON bandits
    * @throws JSONException
    */
-  public static JSONArray updateStatModel (JSONArray bandits, int sf, int power, int reward) throws JSONException {
+  public static void updateStatModel (JSONArray bandits, int sf, int power, int reward) throws JSONException {
     for (int i = 0; i < bandits.length() ; i++) {
       JSONObject bandit = bandits.getJSONObject(i);
       if (bandit.getInt("sf") == sf && bandit.getInt("pw") == power) {
-        bandit.put("rw", reward);
+        int updatedReward = bandit.getInt("rw") + reward;
+        bandit.put("rw", updatedReward);
+        System.out.println("Updated bandit arm SF=" + sf + " PWR=" + power + " to RW=" + reward);
       }
     }
-    return bandits;
   }
 
 }

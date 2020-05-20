@@ -109,6 +109,14 @@ public abstract class NodeProcessor {
     return primary;
   }
 
+  /**
+   * Generates net data
+   * @param spf spreading factor
+   * @param upPw uplink power
+   * @param transmissionParamsId transmission params id
+   * @return JSON array of net data
+   * @throws JSONException
+   */
   public JSONArray getNetData(int spf, int upPw, int transmissionParamsId) throws JSONException {
     JSONObject params = new JSONObject(programResources.dbHandler.readTransmissionParams(transmissionParamsId));
 
@@ -138,11 +146,105 @@ public abstract class NodeProcessor {
     return netData;
   }
 
+  /***
+   * Get normal params as JSON
+   * @param spf
+   * @param upPw
+   * @return
+   * @throws JSONException
+   */
   public JSONObject getNormalParams(int spf, int upPw) throws JSONException {
     JSONObject normalParam = new JSONObject();
     normalParam.put("type", "NORMAL");
     normalParam.put("power", upPw);
     normalParam.put("sf", spf);
     return normalParam;
+  }
+
+  /***
+   * Updates statistical model
+   * @param devId end node id
+   * @param rssi
+   * @param snr
+   * @param sf
+   * @param power
+   * @param confNeed if device requires configuration
+   * @return an updated arm is returned
+   * @throws JSONException
+   */
+  public JSONObject statModelChange (String devId, int rssi, int snr, int sf, int power, boolean confNeed) throws JSONException {
+    boolean configChanged = false;
+
+    if (rssi > this.downPwSensitivity && !confNeed && snr > this.snrSensitivity) {
+      if (rssi > this.downSfSensitivity && sf > 7) {
+        // Decrement SF
+        sf--;
+        configChanged = true;
+      } else if (power < 15) {
+        // Increment power
+        power++;
+        configChanged = true;
+      }
+
+      if (!configChanged && power > 5) {
+        // Decrement power
+        power--;
+        configChanged = true;
+      }
+    } else if (rssi < this.upPwSensitivity && !confNeed || snr < this.snrSensitivity && !confNeed) {
+      if (rssi < this.upSfSensitivity && sf < 12) {
+        sf++;
+        configChanged = true;
+      } else if (power < 15) {
+        power++;
+        configChanged = true;
+      }
+
+      if (!configChanged && power < 15) {
+        power++;
+        configChanged = true;
+      }
+    }
+
+    if (configChanged) {
+      JSONObject bandit = new JSONObject();
+      bandit.put("sf", sf);
+      bandit.put("pw", power);
+      bandit.put("rw", 1);
+      return bandit;
+    }
+    return null;
+  }
+
+  /***
+   * Get statistical model for AP
+   * @param apId access point id
+   * @return stat model as net data
+   */
+  public JSONArray getApStatModel(String apId) {
+    try {
+      String model = programResources.dbHandler.readApStatModel(apId);
+      System.out.println("AP model:" + model);
+      return new JSONArray(model);
+    } catch (JSONException e) {
+      e.printStackTrace();
+      return null;
+    }
+  }
+
+  /**
+   * Get statistical model for end node
+   * @param devId end node id
+   * @return stat model as net data
+   */
+  public JSONArray getEnStatModel(String devId) {
+    try {
+      String model = programResources.dbHandler.readEnStatModel(devId);
+      System.out.println("EN model:" + model);
+      return new JSONArray(model);
+    } catch (JSONException e) {
+      e.printStackTrace();
+      return null;
+    }
   }
 }

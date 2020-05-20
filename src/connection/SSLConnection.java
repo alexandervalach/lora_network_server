@@ -21,8 +21,9 @@ public class SSLConnection extends Thread {
   private ProgramResources programResources;
   private int apIterator;
 
-  /**
+  /***
    * Constructor
+   * @param programResources instance of program resources
    */
   public SSLConnection(ProgramResources programResources) throws Exception {
     this.programResources = programResources;

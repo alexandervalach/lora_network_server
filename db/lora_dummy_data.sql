@@ -12,9 +12,9 @@ INSERT INTO transmission_params
 
 
 INSERT INTO nodes
-(id, dh_key, last_seq, upstream_power, downstream_power, spf, duty_cycle_refresh, application_id, transmission_param_id) VALUES
-('11111aaa','xababvsfjv12345',20,4,7,12,'00:05:06',1,1),
-('22222bbb','wwwwwwwwwwwwwww54321',40,4,7,12,'00:32:21',1,1);
+(id, dh_key, last_seq, upstream_power, downstream_power, spf, duty_cycle_refresh, application_id, transmission_param_id,stat_model) VALUES
+('11111aaa','xababvsfjv12345',20,4,7,12,'00:05:06',1,1,'[{"sf":"7","pw":"5","rw":"8"}]'),
+('22222bbb','wwwwwwwwwwwwwww54321',40,4,7,12,'00:32:21',1,1,'[{"sf":"7","pw":"5","rw":"8"}]');
 
 INSERT INTO aps
 (id, protocol_ver, max_power, channels_num, duty_cycle_refresh, lora_protocol, lora_protocol_ver, transmission_param_id) VALUES
