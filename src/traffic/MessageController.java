@@ -4,6 +4,7 @@ import connection.SocketListener;
 import connection.SocketThread;
 import core.DateManager;
 import core.ProgramResources;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 /**
@@ -43,7 +44,12 @@ public class MessageController implements SocketListener {
       switch (jsonMessage.getString("message_name")) {
         case "RXL":
         case "REGR":
-          type = messageBody.getString("type");
+          try {
+            type = messageBody.getString("type");
+          } catch (JSONException e) {
+            System.out.println("Message type not found, setting message type to: NORMAL");
+            type = "normal";
+          }
           programResources.loRaConcentrator.catchMsg(messageBody, apIdentifier, st.getHwIdentifier(), type);
           break;
         case "KEYR":
