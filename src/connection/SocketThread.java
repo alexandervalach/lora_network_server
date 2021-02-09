@@ -1,5 +1,6 @@
 package connection;
 
+import javax.net.ssl.SSLException;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -49,7 +50,7 @@ public class SocketThread extends Thread
     while (running && socket.isConnected()) {
       try {
         String inData = this.read();
-        //System.out.println(inData);
+        System.out.println(inData);
         processThread.putToQueue(inData);
       } catch (IOException | InterruptedException e) {
         e.printStackTrace();
