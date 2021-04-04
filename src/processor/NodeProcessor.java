@@ -180,28 +180,28 @@ public abstract class NodeProcessor {
         // Decrement SF
         sf--;
         configChanged = true;
-      } else if (power < 15) {
+      } else if (power == 10) {
         // Increment power
-        power++;
+        power = 14;
         configChanged = true;
       }
 
-      if (!configChanged && power > 5) {
+      if (!configChanged && power == 14) {
         // Decrement power
-        power--;
+        power = 10;
         configChanged = true;
       }
     } else if (rssi < this.upPwSensitivity && !confNeed || snr < this.snrSensitivity && !confNeed) {
       if (rssi < this.upSfSensitivity && sf < 12) {
         sf++;
         configChanged = true;
-      } else if (power < 15) {
-        power++;
+      } else if (power == 10) {
+        power = 15;
         configChanged = true;
       }
 
-      if (!configChanged && power < 15) {
-        power++;
+      if (!configChanged && power == 15) {
+        power = 10;
         configChanged = true;
       }
     }
