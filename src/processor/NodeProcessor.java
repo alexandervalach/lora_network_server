@@ -53,7 +53,7 @@ public abstract class NodeProcessor {
     this.sensitivityPoison = props.getInt("LoRaSettings.dutyCycleSensitivityPoisonRssiValue");
     this.restrictionPoison = props.getInt("LoRaSettings.dutyCycleRestrictionPoisonRssiValue");
     String algorithm = props.getStr("ServerSetting.algorithm");
-    this.isBanditAlgorithm = algorithm.equals("ucb") || algorithm.equals("ts");
+    this.isBanditAlgorithm = algorithm.equals("mab");
   }
 
   /**

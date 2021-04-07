@@ -80,7 +80,7 @@ public class MessageHelper {
       if (bandit.getInt("sf") == sf && bandit.getInt("pw") == power) {
         int updatedReward = bandit.getInt("rw") + reward;
         bandit.put("rw", updatedReward);
-        System.out.println("Updated bandit arm SF=" + sf + " PWR=" + power + " to RW=" + reward);
+        System.out.println("Updated bandit arm SF=" + sf + " PWR=" + power + " to RW=" + updatedReward);
       }
     }
   }

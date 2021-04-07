@@ -24,7 +24,7 @@ public class LoRaConcentrator {
   public LoRaConcentrator(ProgramResources programResources) {
     this.programResources = programResources;
     String algorithm = programResources.props.getStr("ServerSetting.algorithm");
-    this.banditAlgorithm = algorithm.equals("ucb") || algorithm.equals("ts");
+    this.banditAlgorithm = algorithm.equals("mab");
     matchingTable = new HashMap<>();
   }
 

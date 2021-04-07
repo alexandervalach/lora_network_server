@@ -225,8 +225,8 @@ public class APProcessor extends NodeProcessor {
       String devId = primary.getString("dev_id");
 
       if (this.isBanditAlgorithm) {
-        String apId = primary.getString("hWIdentifier");
-        netData = this.getApStatModel(apId);
+        // String apId = primary.getString("hWIdentifier");
+        netData = this.getEnStatModel(devId);
 
         if (netData == null) {
           return null;

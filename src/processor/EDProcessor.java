@@ -117,7 +117,7 @@ public class EDProcessor extends NodeProcessor {
       JSONObject messageBody;
 
       if (this.isBanditAlgorithm) {
-        messageBody = this.ucbAlgorithm(primary, finalRssi, finalSnr);
+        messageBody = this.mabAlgorithm(primary, finalRssi, finalSnr);
       } else {
         messageBody = this.adrAlgorithm(primary, finalRssi, finalSnr);
       }
@@ -264,14 +264,14 @@ public class EDProcessor extends NodeProcessor {
   }
 
   /***
-   * Statistical model update using UCB
+   * Statistical model update using Multi-Armed Bandit Approach
    * @param primary primary message
    * @param finalRssi average RSSI value
    * @param finalSnr average SNR value
    * @return messageBody
    * @throws JSONException
    */
-  private JSONObject ucbAlgorithm (JSONObject primary, int finalRssi, int finalSnr) throws JSONException {
+  private JSONObject mabAlgorithm (JSONObject primary, int finalRssi, int finalSnr) throws JSONException {
     String ackType = primary.getString("ack");
 
     if (ackType.equals("UNSUPPORTED")) {
@@ -285,19 +285,31 @@ public class EDProcessor extends NodeProcessor {
 
     JSONObject message = new JSONObject();
     JSONObject messageBody = new JSONObject();
-    JSONArray netData = this.getEnStatModel(devId);
+    JSONArray arms = this.getEnStatModel(devId);
 
-    if (netData == null) {
+    if (arms == null) {
       return null;
     }
 
+    // Updated combination is returned
     JSONObject banditArm = this.statModelChange(devId, finalRssi, finalSnr, sf, power, confNeed);
+    JSONArray netData = new JSONArray();
 
     if (banditArm != null) {
-      MessageHelper.updateStatModel(netData, banditArm.getInt("sf"), banditArm.getInt("pw"), 1);
+      System.out.println("Bandit arm " + banditArm.toString());
+      MessageHelper.updateStatModel(arms, banditArm.getInt("sf"), banditArm.getInt("pw"), 1);
+      System.out.println(primary.getString("dev_id") + ": Statistical model updated");
+
+      // Only sent net data when ack is not required
+      // Nodes are able to update rewards for mandatory messages themselves
+      // if (ackType.equals("VOLATILE")) {
+      System.out.println(primary.getString("dev_id") + ": Network data update scheduled");
+      netData.put(banditArm);
+      // }
     }
 
-    if (netData == null) {
+    if (netData.length() == 0) {
+      System.out.println(primary.getString("dev_id") + ": Bandit arm not updated");
       return null;
     }
 
