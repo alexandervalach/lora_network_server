@@ -1,5 +1,6 @@
 out/
 logs/
 resources/configuration.config
+network-server.jar
 keystore.jks
 .idea/dataSources
