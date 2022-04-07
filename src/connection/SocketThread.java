@@ -1,12 +1,10 @@
 package connection;
 
-import javax.net.ssl.SSLException;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
-import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.concurrent.LinkedBlockingQueue;
 
@@ -46,7 +44,6 @@ public class SocketThread extends Thread
     new Thread(processThread).start();
 
     // While running listens for incoming messages
-
     while (running && socket.isConnected()) {
       try {
         String inData = this.read();
@@ -54,7 +51,8 @@ public class SocketThread extends Thread
         processThread.putToQueue(inData);
       } catch (IOException | InterruptedException e) {
         e.printStackTrace();
-        // System.out.println("Connection closed");
+        System.out.println("No data received");
+        System.out.println("Connection closed");
         break;
       }
     }
@@ -63,10 +61,22 @@ public class SocketThread extends Thread
     try {
       processThread.running = false;
       processThread.putToQueue("ENDING");
-      outStream.close();
-      inStream.close();
-      socket.close();
-      this.processThread.listener.socketDown(internalIdentifier);
+
+      if (outStream != null) {
+        outStream.close();
+      }
+
+      if (inStream != null) {
+        inStream.close();
+      }
+
+      if (socket != null) {
+        socket.close();
+      }
+
+      if (this.processThread.listener != null) {
+        this.processThread.listener.socketDown(internalIdentifier);
+      }
     } catch (IOException | InterruptedException e) {
       e.printStackTrace();
     }
@@ -75,7 +85,6 @@ public class SocketThread extends Thread
   /**
    * Sends downlink message to AP
    * @param jsonText json message as a string
-   * @throws IOException
    */
   public void write(String jsonText) throws IOException {
     outStream = socket.getOutputStream();
@@ -107,7 +116,7 @@ public class SocketThread extends Thread
     byte[] buffer = new byte[1024];
     int length;
 
-    while (true) {
+    do {
       length = inStream.read(buffer);
 
       if (length <= 0) {
@@ -116,12 +125,9 @@ public class SocketThread extends Thread
 
       result.write(buffer, 0, length);
 
-      if (inStream.available() == 0) {
-        break;
-      }
-    }
+    } while (inStream.available() != 0);
 
-    return result.toString("UTF-8");
+    return result.toString(StandardCharsets.UTF_8);
   }
 
   /**
@@ -129,9 +135,9 @@ public class SocketThread extends Thread
    */
   private class ProcessThread implements Runnable {
     private volatile boolean running = true;
-    private LinkedBlockingQueue<String> jobQueue;
-    private SocketListener listener;
-    private SocketThread parent;
+    private final LinkedBlockingQueue<String> jobQueue;
+    private final SocketListener listener;
+    private final SocketThread parent;
 
     public ProcessThread(SocketListener listener, SocketThread parent) {
       this.listener = listener;
