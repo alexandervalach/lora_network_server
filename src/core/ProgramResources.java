@@ -37,17 +37,11 @@ public class ProgramResources {
         this.apProcessor = new APProcessor(this);
         this.dbHandler = new DBHandler(this);
         this.edProcessor = new EDProcessor(this);
-
-        // Testing the fundamentals functions
-        TestClass.testFunct(this);
         TestClass.test1(this);
-
       } else {
         this.props = new Props(this);
-        try (PrintStream o = new PrintStream("logs/" + props.getStr("ServerSetting.logFile"))) {
-          // Sets logging output to log file
-          System.setOut(o);
-        }
+        PrintStream o = new PrintStream(new File("logs/" + props.getStr("ServerSetting.logFile")));
+        //System.setOut(o);
         System.out.println(DateManager.formatDate("dd.MM.yyyy HH:mm:ss") + " Logging started");
         this.loRaConcentrator = new LoRaConcentrator(this);
         this.sslConnection = new SSLConnection(this);

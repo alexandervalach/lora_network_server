@@ -148,7 +148,7 @@ public class EDProcessor extends NodeProcessor {
       if (remainingDutyC > 0) {
         JSONObject rawResponse = new JSONObject(programResources.dbHandler.readDownlinkMsg(devId));
         this.programResources.sslConnection.socketThreadArrayList.get(apIdentifier).write(txlMsg.toString());
-        System.out.println("****** Raw response " + rawResponse);
+        System.out.println("****** Raw response " + rawResponse.toString());
 
         if (rawResponse.toString().equals("{}")) {
           // Write new message and send it to AP
@@ -184,8 +184,9 @@ public class EDProcessor extends NodeProcessor {
    * @param sf value of spreading factor
    * @param dutyCycleBeforeSent value of remaining duty cycle
    * @return int
+   * @throws Exception
    */
-  public int getRemainingDutyCycle(JSONObject msgBody, int sf, int band, int dutyCycleBeforeSent) {
+  public int getRemainingDutyCycle(JSONObject msgBody, int sf, int band, int dutyCycleBeforeSent) throws Exception {
     return dutyCycleBeforeSent - MessageHelper.getMsgCost(msgBody, sf, band);
   }
 
@@ -295,7 +296,7 @@ public class EDProcessor extends NodeProcessor {
     JSONArray netData = new JSONArray();
 
     if (banditArm != null) {
-      System.out.println("Bandit arm " + banditArm);
+      System.out.println("Bandit arm " + banditArm.toString());
       MessageHelper.updateStatModel(arms, banditArm.getInt("sf"), banditArm.getInt("pw"), 1);
       System.out.println(primary.getString("dev_id") + ": Statistical model updated");
 
@@ -357,9 +358,9 @@ public class EDProcessor extends NodeProcessor {
     // Checks if there is a pending reply, or reconfiguration needed or both
     if ((ackType.equals("VOLATILE") || ackType.equals("MANDATORY")) && (!rawResponse.toString().equals("{}") || confNeed || ackType.equals("MANDATORY") || powerChanged)) {
       // Reads power settings
-      int downPw;
-      int upPw;
-      int spf;
+      int downPw = 0;
+      int upPw = 0;
+      int spf = 0;
 
       if (!confNeed) {
         JSONObject readPower = new JSONObject(programResources.dbHandler.readNode(devId));

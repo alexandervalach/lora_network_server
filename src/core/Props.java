@@ -10,6 +10,7 @@ import java.util.Properties;
  * @version 0.3
  */
 public class Props {
+  private ProgramResources programResources;
   public Properties prop;
 
   /**
@@ -18,6 +19,7 @@ public class Props {
    */
   public Props(ProgramResources programResources) {
     try {
+      this.programResources = programResources;
       prop = new Properties();
       // Change source properties file here
       InputStream is = new FileInputStream("resources/configuration.config");

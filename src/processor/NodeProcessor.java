@@ -14,22 +14,22 @@ import java.util.ArrayList;
  * @version 0.3
  */
 public abstract class NodeProcessor {
-  protected final ProgramResources programResources;
+  protected ProgramResources programResources;
   protected int maxDutyMillis;
-  protected final int snrSensitivity;
+  protected int snrSensitivity;
   protected int dutyCycleSensitivity;
   protected int dutyCycleRestriction;
   protected int sensitivityPoison;
   protected int restrictionPoison;
-  protected final int maxPower;
-  protected final int edTransmissionParamId;
-  protected final int downSfSensitivity;
-  protected final int downPwSensitivity;
-  protected final int upSfSensitivity;
-  protected final int upPwSensitivity;
-  protected final int maxSpf;
-  protected final int seqTolerance;
-  protected final boolean isBanditAlgorithm;
+  protected int maxPower;
+  protected int edTransmissionParamId;
+  protected int downSfSensitivity;
+  protected int downPwSensitivity;
+  protected int upSfSensitivity;
+  protected int upPwSensitivity;
+  protected int maxSpf;
+  protected int seqTolerance;
+  protected boolean isBanditAlgorithm;
 
   /**
    * Constructor
@@ -148,10 +148,10 @@ public abstract class NodeProcessor {
 
   /***
    * Get normal params as JSON
-   * @param spf Spreading factor value
-   * @param upPw Transmission power value
-   * @return JSONObject
-   * @throws JSONException exception when working with JSON
+   * @param spf
+   * @param upPw
+   * @return
+   * @throws JSONException
    */
   public JSONObject getNormalParams(int spf, int upPw) throws JSONException {
     JSONObject normalParam = new JSONObject();
@@ -164,13 +164,13 @@ public abstract class NodeProcessor {
   /***
    * Updates statistical model
    * @param devId end node id
-   * @param rssi RSSI value in stat model
-   * @param snr Signal-to-Noise Ratio value in stat model
-   * @param sf Spreading Factor value in stat model
-   * @param power Transmission power value in stat model
+   * @param rssi
+   * @param snr
+   * @param sf
+   * @param power
    * @param confNeed if device requires configuration
    * @return an updated arm is returned
-   * @throws JSONException exception when working with JSON
+   * @throws JSONException
    */
   public JSONObject statModelChange (String devId, int rssi, int snr, int sf, int power, boolean confNeed) throws JSONException {
     boolean configChanged = false;
@@ -208,7 +208,6 @@ public abstract class NodeProcessor {
 
     if (configChanged) {
       JSONObject bandit = new JSONObject();
-      bandit.put("devId", devId);
       bandit.put("sf", sf);
       bandit.put("pw", power);
       bandit.put("rw", 1);

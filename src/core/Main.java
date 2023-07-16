@@ -1,6 +1,7 @@
 package core;
 
 public class Main {
+  private static ProgramResources resources;
 
   /**
    * Main function
@@ -8,6 +9,6 @@ public class Main {
    */
   public static void main(String[] args) {
     // Run with false as normal server, run with true as in debug mode
-    ProgramResources resources = new ProgramResources(false);
+    resources = new ProgramResources(false);
   }
 }
