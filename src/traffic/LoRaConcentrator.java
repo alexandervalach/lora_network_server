@@ -13,7 +13,7 @@ import java.util.HashMap;
  * @version 0.3
  */
 public class LoRaConcentrator {
-  public ProgramResources programResources;
+  public final ProgramResources programResources;
   private final HashMap<String, ArrayList<JSONObject>> matchingTable;
   private final boolean banditAlgorithm;
 
@@ -58,7 +58,7 @@ public class LoRaConcentrator {
 
     if (myGrape == null) {
       // Key is not present in table, creates a new entry
-      myGrape = new ArrayList<JSONObject>();
+      myGrape = new ArrayList<>();
       myGrape.add(jsonObject);
 
       synchronized (matchingTable) {

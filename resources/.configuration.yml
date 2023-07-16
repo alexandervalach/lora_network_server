@@ -1,0 +1,46 @@
+Props:
+  loadQuote: "Properties loaded successfully!"
+
+SSLConnection:
+  portNumber: 25001
+
+DBHandler:
+  USER: "db_username"
+  PASS: "db_password"
+  DB_URL: "jdbc:postgresql://localhost:5432/db_name"
+  JDBC_DRIVER: "org.postgresql.Driver"
+
+ConcentratorDeadTimer:
+  waitTime: 500
+
+Javax:
+  net:
+    ssl:
+      keyStore: "keystore.jks"
+      keyStorePassword: "veryStrongPassword"
+
+APProcessor:
+  preSharedKey: "+/////v////7////+////wIAAAA="
+
+LoRaSettings:
+  maxPower: 15
+  maxSpf: 12
+  apTransmissionParamId: 1
+  edTransmissionParamId: 1
+  powerDownSpfRssiSensitivityBoundary: -83
+  powerDownPowerRssiSensitivityBoundary: -90
+  powerUpSpfRssiSensitivityBoundary: -109
+  powerUpPowerRssiSensitivityBoundary: -102
+  seqTolerance: 15
+  dutyCyclePercent: 10
+  rssiHarmonizingMsgCount: 3
+  snrSensitivityBoundary: -12
+  dutyCycleSensitivityBoundary: 50
+  dutyCycleRestrictionBoundary: 20
+  dutyCycleSensitivityPoisonRssiValue: 30
+  dutyCycleRestrictionPoisonRssiValue: 50
+
+ServerSetting:
+  logFile: "loranes.log"
+  algorithm: "adr" # Possible values are ADR or MAB
+

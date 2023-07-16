@@ -2,7 +2,6 @@ package database;
 
 import core.DateManager;
 import core.ProgramResources;
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.postgresql.util.PSQLException;
@@ -61,7 +60,6 @@ public class DBHandler {
       Class.forName(this.JDBC_DRIVER);
       System.out.println("Connecting to database...");
       this.conn = DriverManager.getConnection(DB_URL, USER, PASS);
-      Statement stmt = conn.createStatement();
     } catch (PSQLException e) {
       System.out.println("Connection refused by database server! Is it functional and running?");
       System.out.println("LoRa Network Server will now exit");
@@ -212,7 +210,7 @@ public class DBHandler {
    * @param primary single message marked as primary
    * @param msgGroupId message group id
    * @param msgTypeId message type id
-   * @throws JSONException
+   * @throws JSONException exception when working with JSON
    */
   public void bulkInsertUplinkMessages (ArrayList<JSONObject> currentGrape, JSONObject primary, int msgGroupId, int msgTypeId) throws JSONException {
     // TODO: Make bulk insert as a transcation
@@ -484,7 +482,7 @@ public class DBHandler {
 
   /**
    * QUERY: Finds if DB has any awaiting downlink messages
-   * @param nodeId
+   * @param nodeId end node identifier
    * @return String
    */
   public String readUplinkMsg(String nodeId) {
