@@ -1,13 +1,14 @@
-#!/bin/sh
+#!/bin/bash
 
-# Check root user
+# Check if the script has been run by user with root privileges
 if [ `id -u` != 0 ]; then
     echo "ERROR: Not root user?"
     exit 1
 fi
 
 echo "Creating launch bash script..."
-# Create a bash script that would run jar file
+
+# Create a bash script that would run jar file and assign necessary permissions
 echo "#!/bin/sh" > ./network-server.sh
 echo "/usr/bin/java -jar network-server.jar" >> ./network-server.sh
 echo "" >> ./network-server.sh 
@@ -31,9 +32,12 @@ echo "[Install]" >> /lib/systemd/system/lorans.service
 echo "WantedBy=multi-user.target" >> /lib/systemd/system/lorans.service
 echo "" >> /lib/systemd/system/lorans.service
 
+# Enable LoRaNES service
 systemctl enable lorans.service
 echo "Everything done!"
 echo "Restarting systemctl"
+
+# Reload system daemons
 systemctl daemon-reload
 echo "Daemon is located at /lib/systemd/system/lorans.service" 
 echo "To disable this service, run this command as super user:" 
