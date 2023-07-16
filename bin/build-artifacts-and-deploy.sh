@@ -16,9 +16,11 @@ jarfile=network-server.jar
 # -d, During compilation, this path is used as a root directory, and sub-folders are created automatically according to the package structure of the classes. If this option is not specified, every single *.class file is written next to their corresponding source code *.java file.
 #
 javac -cp lib/org.json.jar:lib/postgresql-42.2.8.jar -d out src/*/*.java
+echo "LoNES java application compiled successfully"
 
 # Build artifacts and create Java archive
 jar cfm ${jarfile} src/META-INF/MANIFEST.MF -C out .
+echo "LoNES JAR archive created successfully"
 
 # You can run the application on order to test the build
 # However, for production environment, it is recommended to run install-service.sh after successful build
@@ -32,9 +34,12 @@ username=lorafiit
 rfolder=/data/lora-network-server
 
 scp ${jarfile} ${username}@${rhost}:/home/${username}
+echo "LoNES copied to remote location successfully"
 
 # Restart the system service
 ssh ${username}@${rhost} "sudo cp ${jarfile} ${rfolder}"
+echo "LoNES service copied from user home folder to application working directory"
 
 # Restart the system service
 ssh ${username}@${rhost} "sudo systemctl restart lorans"
+echo "LoNES service restarted successfully"
