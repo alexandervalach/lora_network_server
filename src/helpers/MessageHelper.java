@@ -58,7 +58,7 @@ public class MessageHelper {
     //counts the formula, when all data are present
     float symbolTime = (float) Math.pow(2, spf) / ((float) bandwidth / 1000);
     // System.out.println("***** Symbol time is: " + symbolTime);
-    int msgSymbols  = (int) 8 + ((8 * (netDataBytes + appDataBytes + loraFiitOverheadBytes + payloadOverhead + blockSizeOverhead) - 4 * spf + 28 + 16 ) / (4 * (spf-2))) * (cr + 4);
+    int msgSymbols  = 8 + ((8 * (netDataBytes + appDataBytes + loraFiitOverheadBytes + payloadOverhead + blockSizeOverhead) - 4 * spf + 28 + 16 ) / (4 * (spf-2))) * (cr + 4);
     // System.out.println("***** Msg symbol count is :" + msgSymbols);
     float msgCost = msgSymbols * symbolTime;
     // System.out.println("On-Air time for packet calculated is " + msgCost + " milis");
