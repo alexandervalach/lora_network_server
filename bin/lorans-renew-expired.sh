@@ -1,26 +1,18 @@
 #!/bin/bash
-
-appdir=/opt/lones
-keystore=lones.jks
-domain=domain
-cert_home="/etc/letsencrypt/live/${domain}/"
-user_group=user:group
-src_pass=
-dst_pass=
+# letsencrypt certificate are only available for root users #onlyROOTS
+sudo su
 
 # enter the directory for your server identified by domain name
-cd ${cert_home}
+## cd /etc/letsencrypt/live/domain/
 
 # first export key with custom password
-# Use this command if you want to take a private key (domain.key) and a certificate (domain.crt)
-# and combine them into a PKCS12 file (domain.pfx):
-openssl pkcs12 -export -in fullchain.pem -inkey privkey.pem -out pkcs.p12 -passout pass:"${src_pass}" -name ${domain}
+## openssl pkcs12 -export -in fullchain.pem -inkey privkey.pem -out pkcs.p12 -name lora
 
 # import key to keystore file using custom password
-keytool -importkeystore -destkeystore ${keystore} -srcstoretype PKCS12 -srckeystore pkcs.p12 -srcstorepass ${src_pass} -deststorepass ${dst_pass} -noprompt
+## keytool -importkeystore -destkeystore keystore.jks -srcstoretype PKCS12 -srckeystore pkcs.p12
 
 # copy keystore to network server home folder
-cp ${keystore} ${appdir}
+## cp keystore.jks /opt/lorans/
 
 # assign rights for lora-network-server
-sudo chown -R ${user_group} ${appdir}/${keystore}
+## sudo chown -R :lorans /opt/lorans/keystore.jks
