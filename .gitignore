@@ -1,6 +1,7 @@
 out/
 logs/
 resources/configuration.config
-network-server.jar
+lones.jar
+lones.jks
 keystore.jks
 .idea/dataSources
