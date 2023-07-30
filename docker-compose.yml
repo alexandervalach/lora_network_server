@@ -1,0 +1,71 @@
+# https://github.com/khezen/compose-postgres
+version: "3.5"
+
+services:
+  postgres:
+    container_name: postgres_container
+    image: postgres:14
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      PGDATA: /data/postgres
+    volumes:
+      - postgres:/data/postgres
+    ports:
+      - "${DB_PORT}:5432"
+    networks:
+      - postgres
+    restart: always
+
+  pgadmin:
+    container_name: pgadmin_container
+    image: dpage/pgadmin4:6.20
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD}
+      PGADMIN_CONFIG_SERVER_MODE: "False"
+    volumes:
+      - pgadmin:/var/lib/pgadmin
+    ports:
+      - "${PGADMIN_PORT}:80"
+    networks:
+      - postgres
+    restart: always
+
+  server:
+    container_name: server_container
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      LONES_KEYSTORE: ${LONES_KEYSTORE}
+      LONES_KEYSTORE_PASSWORD: ${LONES_KEYSTORE_PASSWORD}
+      LONES_PRESHARED_KEY: ${LONES_PRESHARED_KEY}
+      LONES_LOGFILE: ${LONES_LOGFILE}
+      LONES_PORT: ${LONES_PORT}
+      DB_DRIVER: ${DB_DRIVER}
+      DB_PROTOCOL: ${DB_PROTOCOL}
+      DB_HOST: ${DB_HOST}
+      DB_PORT: ${DB_PORT}
+      DB_NAME: ${DB_NAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_USER: ${DB_USER}
+    depends_on:
+      - postgres
+    volumes:
+      - lones:/opt/lones/
+    ports:
+      - "${LONES_PORT}:${LONES_PORT}"
+    networks:
+      - postgres
+    restart: always
+
+networks:
+  postgres:
+    driver: bridge
+
+volumes:
+  postgres:
+  pgadmin:
+  lones:

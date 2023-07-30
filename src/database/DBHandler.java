@@ -2,10 +2,8 @@ package database;
 
 import core.DateManager;
 import core.ProgramResources;
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.postgresql.util.PSQLException;
 
 import java.sql.*;
 import java.text.DateFormat;
@@ -20,8 +18,12 @@ import java.util.ArrayList;
  * @version 0.3
  */
 public class DBHandler {
-  private final String JDBC_DRIVER;
+  private final String DB_DRIVER;
   private final String DB_URL;
+  private final String HOST;
+  private final String PORT;
+  private final String DB_NAME;
+  private final String DB_PROTOCOL;
 
   // DB credentials
   private final String USER;
@@ -40,12 +42,18 @@ public class DBHandler {
    * @param programResources instance of program resources
    */
   public DBHandler(ProgramResources programResources) {
-    this.JDBC_DRIVER = programResources.props.getStr("DBHandler.JDBC_DRIVER");
-    this.DB_URL = programResources.props.getStr("DBHandler.DB_URL");
-    this.USER = programResources.props.getStr("DBHandler.USER");
-    this.PASS = programResources.props.getStr("DBHandler.PASS");
+    this.DB_DRIVER = System.getenv("DB_DRIVER");
+    this.USER = System.getenv("DB_USER");
+    this.PASS = System.getenv("DB_PASSWORD");
+    this.HOST = System.getenv("DB_HOST");
+    this.PORT = System.getenv("DB_PORT");
+    this.DB_NAME = System.getenv("DB_NAME");
+    this.DB_PROTOCOL = System.getenv("DB_PROTOCOL");
     this.maxSPF = programResources.props.getInt("LoRaSettings.maxSpf");
     this.maxPower = programResources.props.getInt("LoRaSettings.maxPower");
+    
+    this.DB_URL = this.DB_PROTOCOL + "://" + this.HOST + ":" + this.PORT + "/" + this.DB_NAME;
+
     this.rssiHarmonizationLimit = programResources.props.getInt("LoRaSettings.rssiHarmonizingMsgCount");
     this.dateFormat = new SimpleDateFormat("hh:mm:ss");
     this.connect();
@@ -58,16 +66,15 @@ public class DBHandler {
   public void connect() {
     // Driver registration
     try {
-      Class.forName(this.JDBC_DRIVER);
+      Class.forName(this.DB_DRIVER);
       System.out.println("Connecting to database...");
       this.conn = DriverManager.getConnection(DB_URL, USER, PASS);
       Statement stmt = conn.createStatement();
-    } catch (PSQLException e) {
+    } catch (Exception e) {
       System.out.println("Connection refused by database server! Is it functional and running?");
       System.out.println("LoRa Network Server will now exit");
-      System.exit(1);
-    } catch (Exception e) {
       e.printStackTrace();
+      System.exit(1);
     }
 
     System.out.println("Connected!");

@@ -12,6 +12,7 @@ import java.net.Socket;
 import java.security.KeyStore;
 import java.security.SecureRandom;
 import java.util.ArrayList;
+import java.util.Map;
 
 /**
  * Manages secure connection with AP
@@ -19,8 +20,8 @@ import java.util.ArrayList;
  * @version 0.3.2
  */
 public class SSLConnection extends Thread {
-  static final String keyStore = "Javax.net.ssl.keyStore";
-  static final String keyStorePassword = "Javax.net.ssl.keyStorePassword";
+  private final String keyStore;
+  private final String keyStorePassword;
   private final SSLServerSocket serverSocket;
   private final SocketListener messageController;
   public ArrayList<SocketThread> socketThreadArrayList;
@@ -33,8 +34,11 @@ public class SSLConnection extends Thread {
    */
   public SSLConnection(ProgramResources programResources) throws Exception {
     this.programResources = programResources;
-    System.setProperty(keyStore, this.programResources.props.getStr(keyStore));
-    System.setProperty(keyStorePassword, this.programResources.props.getStr(keyStorePassword));
+    this.keyStore = System.getenv("LONES_KEYSTORE");
+    this.keyStorePassword = System.getenv("LONES_KEYSTORE_PASSWORD");
+
+    System.setProperty("keyStorePassword", this.keyStorePassword);
+    System.setProperty("keyStore", this.keyStore);
 
     // Implements security certificate
     /*
@@ -43,9 +47,9 @@ public class SSLConnection extends Thread {
     serverSocket.setEnabledProtocols(new String[] {"TLSv1.2"});
      */
 
-    char[] password = this.programResources.props.getStr(keyStorePassword).toCharArray();
+    char[] password = this.keyStorePassword.toCharArray();
     KeyStore ks = KeyStore.getInstance("JKS");
-    InputStream ksIs = new FileInputStream(this.programResources.props.getStr(keyStore));
+    InputStream ksIs = new FileInputStream(this.keyStore);
     try {
       ks.load(ksIs, password);
     } finally {
@@ -58,7 +62,18 @@ public class SSLConnection extends Thread {
     SSLContext sslContext = SSLContext.getInstance("TLSv1.2");
     sslContext.init(kmf.getKeyManagers(), null, new SecureRandom());
     SSLServerSocketFactory socketFactory = sslContext.getServerSocketFactory();
-    serverSocket = (SSLServerSocket) socketFactory.createServerSocket(this.programResources.props.getInt("SSLConnection.portNumber"));
+
+    /*
+     * DEBUG SECTION
+     */
+    // Map<String, String> envVars = System.getenv();
+    // envVars.forEach((k, v) -> System.out.println((k + "=" + v)));
+    /*
+      END OF DEBUG SECTION
+    */
+
+    System.out.println("LONES_PORT: " + System.getenv("LONES_PORT"));
+    serverSocket = (SSLServerSocket) socketFactory.createServerSocket(Integer.parseInt(System.getenv("LONES_PORT")));
 
     messageController = new MessageController(programResources);
     socketThreadArrayList = new ArrayList<>();

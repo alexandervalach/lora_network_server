@@ -1,34 +1,28 @@
 FROM openjdk:11
 
-WORKDIR /app
+RUN mkdir /opt/lones
+WORKDIR /opt/lones
 
-COPY network-server.jar ./
-
-# Update
-RUN apt-get update
+COPY . ./
 
 # Expose STIoT port
-EXPOSE 25001
+EXPOSE 8002
 
-# Expose docker port for reverse proxy
-EXPOSE 3333
-
-# Make installing script executable
-# CMD chmod +x install_service.sh
-
-# Install as a service
-# CMD ./install_service.sh
-
-# Copy a configuration file
-RUN mkdir ./resources
-COPY resources/configuration.config ./resources/configuration.config
-
-# Add keystore file
-RUN mv keystore.jks ./
+RUN mv ./resources/.configuration.config ./resources/configuration.config
 
 # Crate logs file
 RUN mkdir ./logs
 RUN touch ./logs/logs.log
 
+COPY lones.jks ./
+
+#COPY lones.jar ./
+
+# CMD chmod +x install_service.sh
+RUN javac -cp lib/org.json.jar:lib/postgresql-42.2.8.jar -d out ./src/*/*.java
+
+# Produce JAR file
+CMD ["jar", "cfm", "/opt/lones/lones.jar", "src/META-INF/MANIFEST.MF", "-C", "out", "."]
+
 # Run JAR application
-CMD ["java", "-jar", "/app/network-server.jar"]
+ENTRYPOINT ["java", "-jar", "lones.jar"]

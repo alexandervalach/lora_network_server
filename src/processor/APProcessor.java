@@ -128,6 +128,15 @@ public class APProcessor extends NodeProcessor {
     JSONObject keyAMsg = new JSONObject();
     try {
       String devId = message.getString("dev_id");
+      System.out.println("This is DEV_ID " + devId);  
+
+      String nodeData = programResources.dbHandler.readNode(devId);
+
+      if (nodeData == null) {
+        System.out.println("Node " + devId + " has not been registered yet.");
+        return null;
+      }
+
       JSONObject params = new JSONObject(programResources.dbHandler.readNode(devId));
       JSONObject messageBody = new JSONObject();
       messageBody.put("dev_id", devId);
@@ -148,7 +157,7 @@ public class APProcessor extends NodeProcessor {
    * @param currentGrape array list of message replicas
    */
   public void processREGR(ArrayList<JSONObject> currentGrape) {
-    String preSharedKey = programResources.props.getStr("APProcessor.preSharedKey");
+    String preSharedKey = System.getenv("LONES_PRESHARED_KEY");
 
     try {
       System.out.println("Registering batch " + currentGrape.toString());

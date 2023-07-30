@@ -54,7 +54,11 @@ public class MessageController implements SocketListener {
           break;
         case "KEYR":
           JSONObject responseKEYR = programResources.apProcessor.processKEYR(messageBody);
-          st.write(responseKEYR.toString());
+          if (responseKEYR != null) {
+            st.write(responseKEYR.toString());
+          } else {
+            System.out.println("Nothing to send to the client.");
+          }
           break;
         case "KEYS":
           programResources.apProcessor.processKEYS(messageBody);

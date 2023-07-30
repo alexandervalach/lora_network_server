@@ -40,7 +40,7 @@ public class ProgramResources {
         TestClass.test1(this);
       } else {
         this.props = new Props(this);
-        PrintStream o = new PrintStream(new File("logs/" + props.getStr("ServerSetting.logFile")));
+        PrintStream o = new PrintStream(new File("logs/" + System.getenv("LONES_LOGFILE")));
         //System.setOut(o);
         System.out.println(DateManager.formatDate("dd.MM.yyyy HH:mm:ss") + " Logging started");
         this.loRaConcentrator = new LoRaConcentrator(this);
