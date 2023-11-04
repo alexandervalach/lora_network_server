@@ -1,28 +1,25 @@
-FROM openjdk:11
-
-RUN mkdir /opt/lones
-WORKDIR /opt/lones
-
 COPY . ./
 
-# Expose STIoT port
-EXPOSE 8002
+# Expose the port if needed
+# EXPOSE 8002
 
-RUN mv ./resources/.configuration.config ./resources/configuration.config
+# Optionally, rename the configuration file if needed
+# RUN mv ./resources/.configuration.config ./resources/configuration.config
 
-# Crate logs file
-RUN mkdir ./logs
-RUN touch ./logs/logs.log
+# Create a directory for logs and an empty log file
+RUN mkdir ./logs && touch ./logs/logs.log
 
+# Copy any necessary files, such as a keystore
 COPY lones.jks ./
 
-#COPY lones.jar ./
-
-# CMD chmod +x install_service.sh
+# Compile your Java source code
 RUN javac -cp lib/org.json.jar:lib/postgresql-42.2.8.jar -d out ./src/*/*.java
 
-# Produce JAR file
-CMD ["jar", "cfm", "/opt/lones/lones.jar", "src/META-INF/MANIFEST.MF", "-C", "out", "."]
+# Create the JAR file from compiled classes and a manifest file
+RUN jar cfm /opt/lones/lones.jar src/META-INF/MANIFEST.MF -C out .
 
-# Run JAR application
-ENTRYPOINT ["java", "-jar", "lones.jar"]
+# (Optional) Clean up any intermediate files if needed
+# RUN rm -rf out
+
+# Run the JAR application when the container starts
+CMD ["java", "-jar", "lones.jar"]
