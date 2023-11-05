@@ -50,6 +50,7 @@ Before you begin, make sure you have the following tools and dependencies instal
     - Use `LONES_KEYSTORE_PASSWORD` as a destination password.
     - Use `LONES_KEYSTORE` as a name of the exported Java Key Store.
 
+
    ```bash
    chmod +x ./bin/import-keystore.sh
    ./bin/import-keystore.sh
