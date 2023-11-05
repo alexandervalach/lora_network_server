@@ -43,14 +43,17 @@ Before you begin, make sure you have the following tools and dependencies instal
 
    - The certificate and private key will be saved to `/etc/letsencrypt/live/${domain}/`.
 
-4. **Run the `install.sh` script for the initial setup:**
+4. **Export the Certificate to a Java Key Store.**
+
+    - You can use the `import-keystore.sh` script located in `bin` directory
+    - You have to edit values inside the script first. 
+    - Use `LONES_KEYSTORE_PASSWORD` as a destination password.
+    - Use `LONES_KEYSTORE` as a name of the exported Java Key Store.
 
    ```bash
-   chmod +x install.sh
-   ./install.sh
+   chmod +x ./bin/import-keystore.sh
+   ./bin/import-keystore.sh
    ```
-
-   - The `install.sh` script will execute Docker Compose and initialize the database for the first time.
 
 5. **Create a `.env` file in the project directory with the following environment variables (example values provided):**
 
@@ -75,9 +78,16 @@ Before you begin, make sure you have the following tools and dependencies instal
    LONES_LOGFILE=logs.log
    ```
 
-6. **Export the Certificate to a Java Key Store (as described in Step 3).**
+6. **Run the `install.sh` script for the initial setup:**
 
-7. **Start the services using Docker Compose (for subsequent builds):**
+   ```bash
+   chmod +x install.sh
+   ./install.sh
+   ```
+
+   - The `install.sh` script will execute Docker Compose and initialize the database for the first time.
+
+7. **Start the services using Docker Compose (for any subsequent builds):**
 
    ```bash
    docker-compose up -d
